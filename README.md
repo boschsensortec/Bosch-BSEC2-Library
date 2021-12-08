@@ -74,7 +74,11 @@ As of this publication, the latest Arduino IDE 1.8.16 can be downloaded from thi
 
 Download this library as a zip and import it into the Arduino IDE. Refer to [this](https://www.arduino.cc/en/Guide/Libraries) guide on how to import libraries.
 
-### 3. Install esp32 Board package in the Arduino IDE
+### 3. Install the BME68x library
+   
+   - Download the Arduino library "Bosch_BME68x_Library" from [here](https://github.com/BoschSensortec/Bosch-BME68x-Library). This library is a dependency for using the BSEC library.
+
+### 4. Install esp32 Board package in the Arduino IDE
 
 - Open File->Preferences->Settings
 
@@ -88,7 +92,7 @@ Download this library as a zip and import it into the Arduino IDE. Refer to [thi
 
 - Install the esp32 package
 
-### 4. Modify the platform.txt file under esp32 package
+### 5. Modify the platform.txt file under esp32 package
 
 If you have already used the previous example code and hack guide, remove the linker flag `-libalgobsec` in the platform.txt file and reference to the `compiler.c.elf.extra_flags`.
 
