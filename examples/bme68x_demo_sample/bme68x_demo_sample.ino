@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	bme68x_demo_sample.ino
- * @date	11 Aug 2021
- * @version	1.5.2
+ * @date	22 June 2022
+ * @version	1.5.5
  * 
  * 
  */
@@ -415,7 +415,7 @@ void bleNotifyStartStreaming(const bleController::bleMsg &msg, JsonDocument& jso
 			sampleRate = BSEC_SAMPLE_RATE_LP;
 		break;
 		case bleController::HP:
-			sampleRate = BSEC_SAMPLE_RATE_HIGH_PERFORMANCE;
+			sampleRate = BSEC_SAMPLE_RATE_SCAN;
 		break;
 		default:
 		break;

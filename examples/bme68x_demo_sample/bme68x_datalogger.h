@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	bme68x_datalogger.h
- * @date	11 Aug 2021
- * @version	1.5.2
+ * @date	22 June 2022
+ * @version	1.5.5
  * 
  * @brief	Header file for the bme68x datalogger
  * 
@@ -60,7 +60,7 @@ class bme68xDataLogger
 private:
 	String _configName, _logFileName;
 	std::stringstream _ss;
-	unsigned long _sensorDataPos;
+	unsigned long _sensorDataPos = 0;
     int _fileCounter = 0;
     bool _endOfLine = false;
 		

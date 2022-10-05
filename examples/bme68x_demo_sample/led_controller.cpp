@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	    led_controller.cpp
- * @date	    11 Aug 2021
- * @version		1.5.2
+ * @date	    22 June 2022
+ * @version		1.5.5
  * 
  * @brief    	led controller
  *

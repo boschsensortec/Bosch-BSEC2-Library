@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	demo_app.h
- * @date	11 Aug 2021
- * @version	1.5.2
+ * @date	22 June 2022
+ * @version	1.5.5
  * 
  * @brief	Header file for the bosch application definitions
  * 
@@ -44,7 +44,7 @@
 
 #include "bsec2.h"
 
-#define FIRMWARE_VERSION 				"1.5.2"
+#define FIRMWARE_VERSION 				"1.5.5"
 
 /*!
  * @brief Enumeration for demo app mode

@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	bsec2.cpp
- * @date	11 Aug 2021
- * @version	1.1.40406
+ * @date	22 June 2022
+ * @version	1.5.5
  *
  */
 
@@ -252,9 +252,11 @@ int64_t Bsec2::getTimeMs(void)
 
     if (lastMillis > timeMs) /* An overflow occurred */
     { 
-        lastMillis = timeMs;
         ovfCounter++;
     }
+
+    lastMillis = timeMs;
+
     return timeMs + (ovfCounter * INT64_C(0xFFFFFFFF));
 }
 

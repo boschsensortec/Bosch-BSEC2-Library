@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	bsec_datalogger.h
- * @date	11 Aug 2021
- * @version	1.5.2
+ * @date	22 June 2022
+ * @version	1.5.5
  * 
  * @brief	Header file for the bsec datalogger
  * 
@@ -58,9 +58,9 @@ class bsecDataLogger
 {
 private:
 	String _bsecConfigName, _bsecFileName;
-	unsigned long _bsecDataPos;
+	unsigned long _bsecDataPos = 0;
     int _fileCounter = 0;
-	bool _firstLine;
+	bool _firstLine = false;
 	
 	/*!
 	 * @brief : This function creates a bsec output file

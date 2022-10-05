@@ -29,7 +29,7 @@
 /* Configuration for two class classification used here
  * For four class classification please use configuration under config/FieldAir_HandSanitizer_Onion_Cinnamon
  */
-#include "config/FieldAir_HandSanitizer/FieldAir_HandSanitizer.h"
+#include "config/Default_H2S_NonH2S/Default_H2S_NonH2S.h"
 
 /* Macros used */
 #define STATE_SAVE_PERIOD   UINT32_C(360 * 60 * 1000) /* 360 minutes - 4 times a day */
@@ -81,7 +81,7 @@ Bsec2 envSensor;
 commMux commConfig;
 static uint8_t bsecState[BSEC_MAX_STATE_BLOB_SIZE];
 /* Gas estimate names will be according to the configuration classes used */
-const String gasName[] = { "Field Air", "Hand sanitizer", "Undefined 3", "Undefined 4"};
+const String gasName[] = { "H2S", "NonH2S", "Undefined 3", "Undefined 4"};
 
 /* Entry point for the example */
 void setup(void)
@@ -121,7 +121,7 @@ void setup(void)
     }
 
     /* Load the configuration string that stores information on how to classify the detected gas */
-    if (!envSensor.setConfig(FieldAir_HandSanitizer_config))
+    if (!envSensor.setConfig(Default_H2S_NonH2S_config))
     {
         checkBsecStatus (envSensor);
     }
@@ -133,7 +133,7 @@ void setup(void)
     }
 
     /* Subscribe for the desired BSEC2 outputs */
-    if (!envSensor.updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_HIGH_PERFORMANCE))
+    if (!envSensor.updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_SCAN))
     {
         checkBsecStatus (envSensor);
     }

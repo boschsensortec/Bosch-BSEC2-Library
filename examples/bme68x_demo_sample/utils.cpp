@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	    utils.cpp
- * @date	    11 Aug 2021
- * @version		1.5.2
+ * @date	    22 June 2022
+ * @version		1.5.5
  * 
  * @brief    	utils
  *
@@ -104,7 +104,7 @@ demoRetCode utils::begin()
 	
 	createFileSeed();
 	
-	File::dateTimeCallback(dateTime);
+	SdFile::dateTimeCallback(dateTime);
 
 	return retCode;
 }
@@ -157,23 +157,27 @@ String utils::getDateTime()
  */
 bool utils::getFileWithExtension(String& fName, const String& extension)
 {
+	File root;
 	File file;
 	char fileName[90];
-	_sd.vwd()->rewind(); /* resets the position of the directory */
-	while (file.openNext(_sd.vwd(), O_READ))
+		
+	if (root.open("/"))
 	{
-		if (file.isFile())
+		while (file.openNext(&root, O_READ))
 		{
-			file.getName(fileName, sizeof(fileName));
-			if (String(fileName).endsWith(extension))
+			if (file.isFile())
 			{
-				file.close();
-				
-				fName = String(fileName);
-				return true;
+				file.getName(fileName, sizeof(fileName));
+				if (String(fileName).endsWith(extension))
+				{
+					file.close();
+					
+					fName = String(fileName);
+					return true;
+				}
 			}
+			file.close();  
 		}
-		file.close();  
 	}
 	return false;
 }
@@ -211,11 +215,11 @@ demoRetCode utils::getBsecConfig(const String& fileName, uint8_t configStr[BSEC_
  */
 uint64_t utils::getTickMs(void)
 {
-	uint64_t timeMs = millis();
+	uint64_t timeMs = millis(); /* An overflow occurred */
 	if (_tickMs > timeMs) 
 	{ 
-		_tickMs = timeMs;
 		_tickOverFlowCnt++;
 	}
-	return timeMs + (_tickOverFlowCnt * 0xFFFFFFFF);
+	_tickMs = timeMs;
+	return timeMs + (_tickOverFlowCnt * INT64_C(0xFFFFFFFF));
 }
