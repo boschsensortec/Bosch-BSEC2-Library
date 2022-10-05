@@ -56,7 +56,7 @@
  * It is not allowed to deliver the source code of the Software to any third party without permission of
  * Bosch Sensortec.
  *
- * @file     bsec_interface.h
+ * @file     bsec_interface.h  
  *
  * @brief      
  * Contains the API for BSEC
@@ -101,18 +101,18 @@
  * | Steps                                     | Function                         |
  * |-------------------------------------------|----------------------------------|
  * | Retrieve sensor settings to be used       | bsec_sensor_control()            |
- * | Configure sensor and trigger measurement  | See BME68x API and example codes |
- * | Read results from sensor                  | See BME68x API and example codes |
+ * | Configure sensor and trigger measurement  | [See BME68x API and example codes](https://github.com/BoschSensortec/BME68x-Sensor-API) |
+ * | Read results from sensor                  | [See BME68x API and example codes](https://github.com/BoschSensortec/BME68x-Sensor-API) |
  * | Perform signal processing                 | bsec_do_steps()                  |
  *
  * 
  * - Before shutting down the system, the current state of BSEC can be retrieved and can then be used during 
  *   re-initialization to continue processing.
  *   
- * | Steps                                  | Function          |
- * |----------------------------------------|-------------------|
- * | To retrieve the current library state  |  bsec_get_state() |
- * 
+ * | Steps                                       | Function          |
+ * |---------------------------------------------|-------------------|
+ * | Retrieve the current library state          |  bsec_get_state() |
+ * | Retrieve the current library configuration  |  bsec_get_configuration() |
  * 
  * 
  * ### Configuration and state                       
@@ -184,7 +184,7 @@ bsec_library_return_t bsec_init(void);
  *
  * Based on the requested virtual sensors outputs, BSEC will provide information about the required physical sensor input signals 
  * (see ::bsec_physical_sensor_t) with corresponding sample rates. This information is purely informational as bsec_sensor_control()
- * will ensure the sensor is operated in the required manner. To disable a virtual sensor, set the sample rate to BSEC_SAMPLE_RATE_DISABLED.
+ * will ensure the sensor is operated in the required manner. To disable a virtual sensor, set the sample rate to ::BSEC_SAMPLE_RATE_DISABLED.
  *
  * The subscription update using bsec_update_subscription() is apart from the signal processing one of the the most 
  * important functions. It allows to enable the desired library outputs. The function determines which physical input 
@@ -326,8 +326,8 @@ bsec_library_return_t bsec_update_subscription(const bsec_sensor_configuration_t
                     // Retrieve the IAQ results from output[i].signal
                     // and do something with the data
                     break;
-                case BSEC_OUTPUT_AMBIENT_TEMPERATURE:
-                    // Retrieve the ambient temperature results from output[i].signal
+                case BSEC_OUTPUT_STATIC_IAQ:
+                    // Retrieve the static IAQ results from output[i].signal
                     // and do something with the data
                     break;
                 

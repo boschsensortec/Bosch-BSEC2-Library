@@ -1,8 +1,8 @@
-# Instructions for using the BSEC Arduino Library in Arduino 1.8.16
+# Instructions for using the BSEC Arduino Library in Arduino 1.8.19
 
 ## About BSEC
 
-Bosch Sensortec Environmental Cluster (BSEC) Software v2.0.6.1 released on April 30th, 2021
+Bosch Sensortec Environmental Cluster (BSEC) Software v2.2.0.0 released on May 9th, 2022
 
 The BSEC fusion library has been conceptualized to provide a higher-level signal processing and fusion for the BME688. The library receives compensated sensor values from the sensor API. It processes the BME688 signals to provide the requested sensor outputs.
 
@@ -68,11 +68,11 @@ The BSEC software is only available for download or use after accepting the soft
 
 ### 1. Install the latest Arduino IDE
 
-As of this publication, the latest Arduino IDE 1.8.16 can be downloaded from this [link](https://www.arduino.cc/download_handler.php)
+As of this publication, the latest Arduino IDE 1.8.19 can be downloaded from this [link](https://www.arduino.cc/en/software)
 
-### 2. Install the BSEC library
+### 2. Install the BSEC2 library and BME68x Library
 
-Download this library as a zip and import it into the Arduino IDE. Refer to [this](https://www.arduino.cc/en/Guide/Libraries) guide on how to import libraries.
+Download [Bosch_BSEC2_Library](https://github.com/BoschSensortec/Bosch-BSEC2-Library) and [Bosch_BME68x_Library](https://github.com/BoschSensortec/Bosch-BME68x-Library) (this library is a dependency to the BSEC2 library) as a zip and import it into the Arduino IDE. Refer to [this](https://www.arduino.cc/en/Guide/Libraries) guide on how to import libraries.
 
 ### 3. Install esp32 Board package in the Arduino IDE
 
@@ -88,59 +88,7 @@ Download this library as a zip and import it into the Arduino IDE. Refer to [thi
 
 - Install the esp32 package
 
-### 4. Modify the platform.txt file under esp32 package
-
-If you have already used the previous example code and hack guide, remove the linker flag `-libalgobsec` in the platform.txt file and reference to the `compiler.c.elf.extra_flags`.
-
-The standard arduino-builder now passes the linker flags under `compiler.libraries.ldflags`. Most platform.txt files do not already include this new optional variable. You will hence need to declare this variable's default and add it to the end of the combine recipe. It is recommended to declare it in the following section like below,
-
-```
-# These can be overridden in platform.local.txt
-compiler.c.extra_flags=
-compiler.c.elf.extra_flags=
-#compiler.c.elf.extra_flags=-v
-compiler.cpp.extra_flags=
-compiler.S.extra_flags=
-compiler.ar.extra_flags=
-compiler.elf2hex.extra_flags=
-compiler.libraries.ldflags=
-```
-
-and add it in the combine recipe like the below examples
-
-#### ESP32 community forum's ESP32 core
-
-Original line [151](https://github.com/espressif/arduino-esp32/blob/master/platform.txt#L151),
-
-```
-## Combine gc-sections, archives, and objects
-recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" "-Wl,--Map={build.path}/{build.project_name}.map" "-L{compiler.sdk.path}/lib" "-L{compiler.sdk.path}/ld" {compiler.c.elf.flags} {compiler.c.elf.extra_flags} {build.extra_flags} -Wl,--start-group {object_files} "{archive_file_path}" {compiler.c.elf.libs} -Wl,--end-group -Wl,-EL -o "{build.path}/{build.project_name}.elf"
-```
-
-should become
-
-```
-## Combine gc-sections, archives, and objects
-recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" "-Wl,--Map={build.path}/{build.project_name}.map" "-L{compiler.sdk.path}/lib" "-L{compiler.sdk.path}/ld" {compiler.c.elf.flags} {compiler.c.elf.extra_flags} {build.extra_flags} -Wl,--start-group {object_files} "{archive_file_path}" {compiler.c.elf.libs} {compiler.libraries.ldflags} -Wl,--end-group -Wl,-EL -o "{build.path}/{build.project_name}.elf"
-```
-
-#### ESP8266 community forum's ESP8266 core
-
-Original line [122](https://github.com/esp8266/Arduino/blob/3.0.2/platform.txt#L122),
-
-```
-## Combine gc-sections, archives, and objects
-recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {build.exception_flags} -Wl,-Map "-Wl,{build.path}/{build.project_name}.map" {compiler.c.elf.flags} {compiler.c.elf.extra_flags} -o "{build.path}/{build.project_name}.elf" -Wl,--start-group {object_files} "{archive_file_path}" {compiler.c.elf.libs} -Wl,--end-group  "-L{build.path}"
-```
-
-should become
-
-```
-## Combine gc-sections, archives, and objects
-recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {build.exception_flags} -Wl,-Map "-Wl,{build.path}/{build.project_name}.map" {compiler.c.elf.flags} {compiler.c.elf.extra_flags} -o "{build.path}/{build.project_name}.elf" -Wl,--start-group {object_files} "{archive_file_path}" {compiler.c.elf.libs} {compiler.libraries.ldflags} -Wl,--end-group  "-L{build.path}"
-```
-
-### 5. Verify and upload the example code
+### 4. Verify and upload the example code
 
 Start or restart the Arduino IDE. Open any of the example codes found under  ```Bosch_BSEC2_Library>examples```.
 
@@ -154,13 +102,13 @@ Select your board and COM port. Upload the example. Open the Serial monitor. You
 
 - bme68x_demo_sample.ino: This demonstrator application running on an x8 board has the feature of sensor data logging and BSEC algorithm illustrated. Please refer [BME688 Development Kit-Firmware-Quick-Start-Guide](examples/bme68x_demo_sample/Quick_Start_Guide.md) for installing dependent libraries and how to flash.
 
-### 6. Tested board/core list
+### 5. Tested board/core list
 
 The current list of tested boards include,
 
 | Core MCU | Tested boards | Arduino core version | Arduino core repository |
 |----------|---------------|----------------------|-------------------------|
-| Esp32 | Adafruit ESP32 Feather | v2.0.1 | https://github.com/espressif/arduino-esp32 |
+| Esp32 | Adafruit ESP32 Feather | v2.0.3 | https://github.com/espressif/arduino-esp32 |
 | Esp8266 | Adafruit Feather HUZZAH ESP8266 | v3.0.2 | https://github.com/esp8266/Arduino |
 
 ## Copyright (C) 2021 Bosch Sensortec GmbH. All rights reserved.
