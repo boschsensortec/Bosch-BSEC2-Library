@@ -30,21 +30,13 @@ Supported platforms
 
 Available binaries for download:
 
-| Platform | Compiler | ROM (BSEC) | RAM  | TYPE |
-|----------|----------|------------|------|------|
-| Cortex-ARM | ARMCC | 24.22-25.72k | 4.38k | Cortex-M0, M0+, M3, M4, M4_FPU, M7 |
-| Cortex-ARM | GCC | 27.22-49.45k | 4.38k | Cortex-M0, M0+, M3, M4, M4_FPU, M7 |
-| Cortex-ARM | IAR | 27.05k-27.73 | 4.38k | Cortex-M0, M0+, M3, M4, M4_FPU, M7 |
-| Cortex-A* | GCC | 28.20-33k | 4.38k | Cortex-A7, Cortex-A73 |
-| AVR_8bit | AVR-GCC | 56.8-57.8k | 39.61k | MegaAVR, XMEGA |
-| AVR_32bit | AVR-GCC | 31.99k | 4.5k | 32-bit AVR UC3 |
-| ESP8266 | xtensa-lx106-elf-gcc | 36.24k | 4.39k | ESP8266 |
-| ESP32 | xtensa-esp32-elf-gcc | 31.84k | 4.39k | ESP32 |
-| MSP430 | msp430-elf-gcc | 45k | 3.97k | MSP430 |
-| Android system-x86 | gcc | 46.93-44.72k | 4.48k | x86, x86_64 |
-| Android system-arm | gcc | 51.9k | 4.43k | arm, arm64 |
-| Raspberry PI 0 linux | arm-linux-gnueabihf-gcc | 75.36k | 4.39k | armv6-32bits |
-| Raspberry PI3 linux | arm-linux-gnueabihf-gcc | 75.38k | 4.39k | armv8-a-64bits |
+| Platform | Compiler | TYPE |
+|----------|----------|------|
+| Cortex-ARM | GCC | Cortex-M0, M0+, M3, M4, M4_FPU, M7 |
+| AVR_8bit | AVR-GCC | MegaAVR, XMEGA |
+| ESP8266 | xtensa-lx106-elf-gcc | ESP8266 |
+| ESP32 | xtensa-esp32-elf-gcc | ESP32 |
+| ESP32-S2 | xtensa-esp32s2-elf-gcc | ESP32 |
 
 The library size information above doesn't include additional dependencies based on the embedded system project & platform.
 
