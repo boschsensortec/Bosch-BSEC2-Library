@@ -1,0 +1,47 @@
+{
+  "name": "BSEC2 Software Library",
+  "description": "Bosch Sensortec Environmental Cluster (BSEC) Software library for use with the BME68x has been conceptualized to provide higher-level signal processing and fusion for the BME68x. The library receives compensated sensor values from the sensor API. It processes the BME68x signals to provide the requested sensor outputs.",
+  "homepage": "https://www.bosch-sensortec.com/software-tools/software/bme688-software/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BoschSensortec/Bosch-BME68x-Library"
+  },
+  "version": "1.1.2061",
+  "authors": {
+    "name": "Bosch Sensortec",
+    "email": "contact@bosch-sensortec.com"
+  },
+  "frameworks": "arduino",
+  "platforms": "*",
+  "build": {
+    "includeDir": "src/inc",
+    "extraScript": "extra_script.py"
+  },
+  "examples": [
+    {
+      "name": "Basic usage for Adafruit ESP8266 Board",
+      "base": "examples/generic_examples/basic",
+      "files": ["basic.ino"]
+    },
+	{
+      "name": "Basic usage with config state saves for Adafruit ESP8266 Board",
+      "base": "examples/generic_examples/basic_config_state",
+      "files": ["basic_config_state.ino"]
+    },
+	{
+      "name": "Basic usage for Adafruit ESP32 Feather Board",
+      "base": "examples/x8_board_examples/basic",
+      "files": ["basic.ino"]
+    },
+	{
+      "name": "Basic usage with config state saves for Adafruit ESP32 Feather Board",
+      "base": "examples/x8_board_examples/basic_config_state",
+      "files": ["basic_config_state.ino"]
+    },
+    {
+      "name": "datalogging and integration of BSEC2x library for Adafruit ESP32 Feather Board",
+      "base": "examples/bme68x_demo_sample",
+      "files": ["bme68x_demo_sample.ino"]
+    }
+  ]
+}
