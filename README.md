@@ -36,7 +36,9 @@ Available binaries for download:
 | AVR_8bit | AVR-GCC | MegaAVR, XMEGA |
 | ESP8266 | xtensa-lx106-elf-gcc | ESP8266 |
 | ESP32 | xtensa-esp32-elf-gcc | ESP32 |
-| ESP32-S2 | xtensa-esp32s2-elf-gcc | ESP32 |
+| ESP32 | xtensa-esp32s2-elf-gcc | ESP32-S2 |
+| ESP32 | xtensa-esp32s3-elf-gcc | ESP32-S3 |
+| ESP32 | riscv32-esp-elf-gcc | ESP32-C3 |
 
 The library size information above doesn't include additional dependencies based on the embedded system project & platform.
 
@@ -66,7 +68,11 @@ As of this publication, the latest Arduino IDE 1.8.19 can be downloaded from thi
 
 Download [Bosch_BSEC2_Library](https://github.com/BoschSensortec/Bosch-BSEC2-Library) and [Bosch_BME68x_Library](https://github.com/BoschSensortec/Bosch-BME68x-Library) (this library is a dependency to the BSEC2 library) as a zip and import it into the Arduino IDE. Refer to [this](https://www.arduino.cc/en/Guide/Libraries) guide on how to import libraries.
 
-### 3. Install esp32 Board package in the Arduino IDE
+### 3. Install the BME68x library
+
+   - Download the Arduino library "Bosch_BME68x_Library" from [here](https://github.com/BoschSensortec/Bosch-BME68x-Library). This library is a dependency for using the BSEC library.
+
+### 4. Install esp32 Board package in the Arduino IDE
 
 - Open File->Preferences->Settings
 
@@ -80,7 +86,7 @@ Download [Bosch_BSEC2_Library](https://github.com/BoschSensortec/Bosch-BSEC2-Lib
 
 - Install the esp32 package
 
-### 4. Verify and upload the example code
+### 5. Verify and upload the example code
 
 Start or restart the Arduino IDE. Open any of the example codes found under  ```Bosch_BSEC2_Library>examples```.
 
@@ -94,7 +100,7 @@ Select your board and COM port. Upload the example. Open the Serial monitor. You
 
 - bme68x_demo_sample.ino: This demonstrator application running on an x8 board has the feature of sensor data logging and BSEC algorithm illustrated. Please refer [BME688 Development Kit-Firmware-Quick-Start-Guide](examples/bme68x_demo_sample/Quick_Start_Guide.md) for installing dependent libraries and how to flash.
 
-### 5. Tested board/core list
+### 6. Tested board/core list
 
 The current list of tested boards include,
 
@@ -103,4 +109,4 @@ The current list of tested boards include,
 | Esp32 | Adafruit ESP32 Feather | v2.0.3 | https://github.com/espressif/arduino-esp32 |
 | Esp8266 | Adafruit Feather HUZZAH ESP8266 | v3.0.2 | https://github.com/esp8266/Arduino |
 
-## Copyright (C) 2021 Bosch Sensortec GmbH. All rights reserved.
+## Copyright (C) 2023 Bosch Sensortec GmbH. All rights reserved.
