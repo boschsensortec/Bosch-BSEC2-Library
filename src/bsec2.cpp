@@ -277,22 +277,22 @@ bool Bsec2::processData(int64_t currTimeNs, const bme68xData &data)
         inputs[nInputs].time_stamp = currTimeNs;
         nInputs++;
 #ifdef BME68X_USE_FPU
-        inputs[nInputs].sensor_id = BSEC_INPUT_TEMPERATURE;
-#else
-        inputs[nInputs].sensor_id = BSEC_INPUT_TEMPERATURE / 100.0f;
-#endif
         inputs[nInputs].signal = data.temperature;
+#else
+        inputs[nInputs].signal = data.temperature / 100.0f;
+#endif
+        inputs[nInputs].sensor_id = BSEC_INPUT_TEMPERATURE;
         inputs[nInputs].time_stamp = currTimeNs;
         nInputs++;
     }
     if (BSEC_CHECK_INPUT(bmeConf.process_data, BSEC_INPUT_HUMIDITY))
     {
 #ifdef BME68X_USE_FPU
-        inputs[nInputs].sensor_id = BSEC_INPUT_HUMIDITY;
-#else
-        inputs[nInputs].sensor_id = BSEC_INPUT_HUMIDITY / 1000.0f;
-#endif
         inputs[nInputs].signal = data.humidity;
+#else
+        inputs[nInputs].signal = data.humidity / 1000.0f;
+#endif
+        inputs[nInputs].sensor_id = BSEC_INPUT_HUMIDITY;
         inputs[nInputs].time_stamp = currTimeNs;
         nInputs++;
     }
