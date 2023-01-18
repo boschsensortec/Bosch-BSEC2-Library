@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	bsec2.h
- * @date	03 Jan 2023
- * @version	1.3.0
+ * @date	18 Jan 2023
+ * @version	1.4.0
  *
  */
 
