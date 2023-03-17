@@ -51,13 +51,16 @@
 #define PIN_BUTTON_1 			14
 #define PIN_BUTTON_2 			32
 
+#define USE_RING
+
 enum gasLabel
 {
 	BSEC_NO_CLASS,
 	BSEC_CLASS_1,
 	BSEC_CLASS_2,
 	BSEC_CLASS_3,
-	BSEC_CLASS_4
+	BSEC_CLASS_4,
+  BSEC_NUM_CLASSES
 };
 
 /*!
@@ -82,6 +85,16 @@ private:
 	 * @brief :  This function is the interrupt handler of the second button
 	 */
     static void isrButton2();
+
+        /*!
+   * @brief : This function is the interrupt handler of the first button (next label ring style)
+   */
+    static void isrButton1_ring();
+
+    /*!
+   * @brief :  This function is the interrupt handler of the second button (lowers label ring style)
+   */
+    static void isrButton2_ring();
 
 public:
 
