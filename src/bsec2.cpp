@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
+ * Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
  *
  * BSD-3-Clause
  *
@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	bsec2.cpp
- * @date	18 Jan 2023
- * @version	1.4.0
+ * @date	17 January 2023
+ * @version	2.0.6
  *
  */
 
@@ -51,8 +51,8 @@ Bsec2::Bsec2(void)
     extTempOffset = 0.0f;
     opMode = BME68X_SLEEP_MODE;
     newDataCallback = nullptr;
+    bsecInstance = nullptr;
 
-    memset(&sensor, 0, sizeof(sensor));
     memset(&version, 0, sizeof(version));
     memset(&bmeConf, 0, sizeof(bmeConf));
     memset(&outputs, 0, sizeof(outputs));
@@ -113,7 +113,7 @@ bool Bsec2::updateSubscription(bsecSensor sensorList[], uint8_t nSensors, float 
     }
 
     /* Subscribe to library virtual sensors outputs */
-    status = bsec_update_subscription(virtualSensors, nSensors, sensorSettings, &nSensorSettings);
+    status = bsec_update_subscription_m(bsecInstance, virtualSensors, nSensors, sensorSettings, &nSensorSettings);
     if (status != BSEC_OK)
         return false;
 
@@ -135,7 +135,7 @@ bool Bsec2::run(void)
         /* Provides the information about the current sensor configuration that is
            necessary to fulfill the input requirements, eg: operation mode, timestamp
            at which the sensor data shall be fetched etc */
-        status = bsec_sensor_control(currTimeNs, &bmeConf);
+        status = bsec_sensor_control_m(bsecInstance ,currTimeNs, &bmeConf);
         if (status != BSEC_OK)
             return false;
 
@@ -194,7 +194,7 @@ bool Bsec2::getState(uint8_t *state)
 {
     uint32_t n_serialized_state = BSEC_MAX_STATE_BLOB_SIZE;
 
-    status = bsec_get_state(0, state, BSEC_MAX_STATE_BLOB_SIZE, workBuffer, BSEC_MAX_WORKBUFFER_SIZE,
+    status = bsec_get_state_m(bsecInstance, 0, state, BSEC_MAX_STATE_BLOB_SIZE, workBuffer, BSEC_MAX_WORKBUFFER_SIZE,
             &n_serialized_state);
     if (status != BSEC_OK)
         return false;
@@ -206,7 +206,7 @@ bool Bsec2::getState(uint8_t *state)
  */
 bool Bsec2::setState(uint8_t *state)
 {
-    status = bsec_set_state(state, BSEC_MAX_STATE_BLOB_SIZE, workBuffer, BSEC_MAX_WORKBUFFER_SIZE);
+    status = bsec_set_state_m(bsecInstance, state, BSEC_MAX_STATE_BLOB_SIZE, workBuffer, BSEC_MAX_WORKBUFFER_SIZE);
     if (status != BSEC_OK)
         return false;
 
@@ -222,7 +222,7 @@ bool Bsec2::getConfig(uint8_t *config)
 {
     uint32_t n_serialized_settings = 0;
     
-    status = bsec_get_configuration(0, config, BSEC_MAX_PROPERTY_BLOB_SIZE, workBuffer, BSEC_MAX_WORKBUFFER_SIZE, &n_serialized_settings);
+    status = bsec_get_configuration_m(bsecInstance, 0, config, BSEC_MAX_PROPERTY_BLOB_SIZE, workBuffer, BSEC_MAX_WORKBUFFER_SIZE, &n_serialized_settings);
     if (status != BSEC_OK)
         return false;
 
@@ -234,7 +234,7 @@ bool Bsec2::getConfig(uint8_t *config)
  */
 bool Bsec2::setConfig(const uint8_t *config)
 {
-    status = bsec_set_configuration(config, BSEC_MAX_PROPERTY_BLOB_SIZE, workBuffer, BSEC_MAX_WORKBUFFER_SIZE);
+    status = bsec_set_configuration_m(bsecInstance, config, BSEC_MAX_PROPERTY_BLOB_SIZE, workBuffer, BSEC_MAX_WORKBUFFER_SIZE);
     if (status != BSEC_OK)
         return false;
 
@@ -258,6 +258,23 @@ int64_t Bsec2::getTimeMs(void)
     lastMillis = timeMs;
 
     return timeMs + (ovfCounter * INT64_C(0xFFFFFFFF));
+}
+
+/**
+ * @brief Function to assign the memory block to the bsec instance
+ */
+void Bsec2::allocateMemory(uint8_t (&memBlock)[BSEC_INSTANCE_SIZE])
+{
+    /* allocating memory for the bsec instance */
+    bsecInstance = memBlock;
+}
+
+/**
+ * @brief Function to de-allocate the dynamically allocated memory
+ */
+void Bsec2::clearMemory(void)
+{
+    delete[] bsecInstance;
 }
 
 /* Private functions */
@@ -327,7 +344,7 @@ bool Bsec2::processData(int64_t currTimeNs, const bme68xData &data)
         memset(outputs.output, 0, sizeof(outputs.output));
 
         /* Processing of the input signals and returning of output samples is performed by bsec_do_steps() */
-        status = bsec_do_steps(inputs, nInputs, outputs.output, &outputs.nOutputs);
+        status = bsec_do_steps_m(bsecInstance, inputs, nInputs, outputs.output, &outputs.nOutputs);
 
         if (status != BSEC_OK)
             return false;
@@ -343,11 +360,22 @@ bool Bsec2::processData(int64_t currTimeNs, const bme68xData &data)
  */
 bool Bsec2::beginCommon()
 {
-    status = bsec_init();
+    if (!bsecInstance)
+    {
+        /* allocate memory for the instance if not allocated */
+        bsecInstance = new uint8_t[bsec_get_instance_size_m()];
+    }
+
+    if (BSEC_INSTANCE_SIZE < bsec_get_instance_size_m())
+    {
+        status = BSEC_E_INSUFFICIENT_INSTANCE_SIZE;
+        return false;
+    }
+    status = bsec_init_m(bsecInstance);
     if (status != BSEC_OK)
         return false;
 
-    status = bsec_get_version(&version);
+    status = bsec_get_version_m(bsecInstance, &version);
     if (status != BSEC_OK)
         return false;
 

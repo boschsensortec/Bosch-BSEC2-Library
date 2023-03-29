@@ -73,7 +73,8 @@ extern "C"
 #endif
 
 /*!
- * @addtogroup bsec_interface BSEC C Interface
+ * @addtogroup bsec_datatypes BSEC Enumerations and Definitions
+ * @brief
  * @{*/
 
 #ifdef __KERNEL__
@@ -84,8 +85,8 @@ extern "C"
 
 #define BSEC_MAX_WORKBUFFER_SIZE     (4096)    /*!< Maximum size (in bytes) of the work buffer */
 #define BSEC_MAX_PHYSICAL_SENSOR     (8)         /*!< Number of physical sensors that need allocated space before calling bsec_update_subscription() */
-#define BSEC_MAX_PROPERTY_BLOB_SIZE  (2285)     /*!< Maximum size (in bytes) of the data blobs returned by bsec_get_configuration() */
-#define BSEC_MAX_STATE_BLOB_SIZE     (213)        /*!< Maximum size (in bytes) of the data blobs returned by bsec_get_state()*/
+#define BSEC_MAX_PROPERTY_BLOB_SIZE  (1974)     /*!< Maximum size (in bytes) of the data blobs returned by bsec_get_configuration() */
+#define BSEC_MAX_STATE_BLOB_SIZE     (221)        /*!< Maximum size (in bytes) of the data blobs returned by bsec_get_state()*/
 #define BSEC_SAMPLE_RATE_DISABLED    (65535.0f)      /*!< Sample rate of a disabled sensor */
 #define BSEC_SAMPLE_RATE_ULP         (0.0033333f)           /*!< Sample rate in case of Ultra Low Power Mode */
 #define BSEC_SAMPLE_RATE_CONT        (1.0f)          /*!< Sample rate in case of Continuous Mode */
@@ -155,18 +156,13 @@ typedef enum
      */
     BSEC_INPUT_HEATSOURCE = 14,        
 
-    /**
-     * @brief Additional input for device heat compensation 8
-     *
-     * Generic heat source 8
-     */
-
+    
     
     /**
      * @brief Additional input that disables baseline tracker
      *
-     * 0 - Normal  
-     * 1 - Event 1
+     * 0 - Normal,
+     * 1 - Event 1,
      * 2 - Event 2
      */
     BSEC_INPUT_DISABLE_BASELINE_TRACKER = 23, 
@@ -202,8 +198,8 @@ typedef enum
      */
     BSEC_OUTPUT_IAQ = 1,                           
     BSEC_OUTPUT_STATIC_IAQ = 2,                             /*!< Unscaled indoor-air-quality estimate */ 
-    BSEC_OUTPUT_CO2_EQUIVALENT = 3,                         /*!< co2 equivalent estimate [ppm] */   
-    BSEC_OUTPUT_BREATH_VOC_EQUIVALENT = 4,                  /*!< breath VOC concentration estimate [ppm] */    	
+    BSEC_OUTPUT_CO2_EQUIVALENT = 3,                         /*!< CO2 equivalent estimate [ppm] */   
+    BSEC_OUTPUT_BREATH_VOC_EQUIVALENT = 4,                  /*!< Breath VOC concentration estimate [ppm] */    	
 
     /**
      * @brief Temperature sensor signal [degrees Celsius]
@@ -287,7 +283,7 @@ typedef enum
      */
     BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY = 15,    
 
-	BSEC_OUTPUT_GAS_PERCENTAGE = 21,                        /*!< percentage of min and max filtered gas value [%] */
+	BSEC_OUTPUT_GAS_PERCENTAGE = 21,                        /*!< Percentage of min and max filtered gas value [%] */
 	
     /**
      * @brief Gas estimate output channel 1 [0-1]
@@ -320,7 +316,7 @@ typedef enum
     BSEC_E_SU_SAMPLERATELIMITS = -12,               /*!< The sample_rate of the requested output (virtual) sensor passed to bsec_update_subscription() does not match with the sampling rate allowed for that sensor */
     BSEC_E_SU_DUPLICATEGATE = -13,                  /*!< Duplicate output (virtual) sensor ids requested through bsec_update_subscription() */
     BSEC_E_SU_INVALIDSAMPLERATE = -14,              /*!< The sample_rate of the requested output (virtual) sensor passed to bsec_update_subscription() does not fall within the global minimum and maximum sampling rates  */
-    BSEC_E_SU_GATECOUNTEXCEEDSARRAY = -15,          /*!< Not enough memory allocated to hold returned input (physical) sensor data from bsec_update_subscription(), i.e., n_required_sensor_settings < #BSEC_MAX_PHYSICAL_SENSOR */
+    BSEC_E_SU_GATECOUNTEXCEEDSARRAY = -15,          /*!< Not enough memory allocated to hold returned input (physical) sensor data from bsec_update_subscription(), i.e., n_required_sensor_settings ::BSEC_MAX_PHYSICAL_SENSOR */
     BSEC_E_SU_SAMPLINTVLINTEGERMULT = -16,          /*!< The sample_rate of the requested output (virtual) sensor passed to bsec_update_subscription() is not correct */
     BSEC_E_SU_MULTGASSAMPLINTVL = -17,              /*!< The sample_rate of the requested output (virtual), which requires the gas sensor, is not equal to the sample_rate that the gas sensor is being operated */
     BSEC_E_SU_HIGHHEATERONDURATION = -18,           /*!< The duration of one measurement is longer than the requested sampling interval */
@@ -337,7 +333,7 @@ typedef enum
     BSEC_E_CONFIG_INSUFFICIENTWORKBUFFER = -38,     /*!< Provided work_buffer is not large enough to hold the desired string */
     BSEC_E_CONFIG_INVALIDSTRINGSIZE = -40,          /*!< String size encoded in configuration/state strings passed to bsec_set_[configuration/state]() does not match with the actual string size n_serialized_[settings/state] passed to these functions */
     BSEC_E_CONFIG_INSUFFICIENTBUFFER = -41,         /*!< String buffer insufficient to hold serialized data from BSEC library */
-    BSEC_E_SET_INVALIDCHANNELIDENTIFIER = -100,     /*!< Internal error code, size of work buffer in setConfig must be set to BSEC_MAX_WORKBUFFER_SIZE */
+    BSEC_E_SET_INVALIDCHANNELIDENTIFIER = -100,     /*!< Internal error code, size of work buffer in setConfig must be set to #BSEC_MAX_WORKBUFFER_SIZE */
     BSEC_E_SET_INVALIDLENGTH = -104,                /*!< Internal error code */
     BSEC_W_SC_CALL_TIMING_VIOLATION = 100,          /*!< Difference between actual and defined sampling intervals of bsec_sensor_control() greater than allowed */
     BSEC_W_SC_MODEXCEEDULPTIMELIMIT = 101,          /*!< ULP plus is not allowed because an ULP measurement just took or will take place */ /*MOD_ONLY*/

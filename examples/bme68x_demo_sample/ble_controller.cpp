@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	    ble_controller.cpp
- * @date	    22 June 2022
- * @version		1.5.5
+ * @date	    17 January 2023
+ * @version		2.0.6
  * 
  * @brief    	ble_controller
  *
@@ -44,15 +44,22 @@
 
 bleController::bleCmd		bleController::cmdList[] = {
     {"setlabel", &bleController::parseCmdSetLabel, bleController::SET_LABEL},
-	{"getlabel", &bleController::parseCmdGetLabel, bleController::GET_LABEL},
+	{"setlabelinfo", &bleController::parseCmdSetLabelInfo, bleController::SET_LABEL_INFO},
+	{"getlabelinfo", &bleController::parseCmdGetLabelInfo, bleController::GET_LABEL_INFO},
 	{"setrtctime", &bleController::parseCmdSetRtcTime, bleController::SET_RTC_TIME},
 	{"getrtctime", &bleController::parseCmdGetRtcTime, bleController::GET_RTC_TIME},
 	{"start", &bleController::parseCmdStartStreaming, bleController::START_STREAMING},
 	{"stop", &bleController::parseCmdStopStreaming, bleController::STOP_STREAMING},
-};
+	{"readconfig", &bleController::parseCmdReadConfig, bleController::READ_CONFIG},
+	{"setappmode", &bleController::parseCmdSetAppmode, bleController::SET_APPMODE},
+	{"getappmode", &bleController::parseCmdGetAppmode, bleController::GET_APPMODE},
+	{"setgroundtruth", &bleController::parseCmdSetGroundtruth, bleController::SET_GROUNDTRUTH},
+	{"getfwversion", &bleController::parseCmdGetFwVersion, bleController::GET_FW_VERSION},
+	};
 
 QueueHandle_t 			bleController::msgQueue = nullptr; 
 BLECharacteristic		*bleController::bleCharTx = nullptr, *bleController::bleCharRx = nullptr;
+BLEServer 				*bleController::pServer = nullptr;
 
 /*!
  * @brief bleController class Constructor
@@ -68,12 +75,14 @@ demoRetCode bleController::begin()
 	demoRetCode retCode = EDK_OK;
 	
 	msgQueue = xQueueCreate(BLE_MSG_QUEUE_LEN, sizeof(bleMsg));
-	
+
 	/* Initialize BLE with Device name */
     BLEDevice::init("BME688 Development Kit");
     /* Create Server */
-    BLEServer *pServer = BLEDevice::createServer();
-    /* Create UART Service */
+	pServer = BLEDevice::createServer();
+	pServer->setCallbacks(new serverCallbacks());
+    
+	/* Create UART Service */
     BLEService *pService = pServer->createService(SERVICE_UUID);
     /* add characteristics for transmitting and receiving */
     bleCharTx = pService->createCharacteristic(
@@ -95,11 +104,18 @@ demoRetCode bleController::begin()
 	return retCode;
 }
 
+/*!
+ * @brief : This function fetches the RTC time which is requested through ble command
+ */
 bleController::cmdStatus bleController::parseCmdGetRtcTime(std::stringstream& ss, bleMsg& msg)
 {
 	return CMD_VALID;
 }
 
+/*!
+ * @brief : This function parses the RTC time received from the ble device and updates
+ *        	the RTC time to the ble structure
+ */
 bleController::cmdStatus bleController::parseCmdSetRtcTime(std::stringstream& ss, bleMsg& msg)
 {
 	uint32_t rtc;
@@ -111,22 +127,69 @@ bleController::cmdStatus bleController::parseCmdSetRtcTime(std::stringstream& ss
     return CMD_INVALID;
 }
 
-bleController::cmdStatus bleController::parseCmdGetLabel(std::stringstream& ss, bleMsg& msg)
-{
-	return CMD_VALID;
-}
-
+/*!
+ * @brief : This function updates the received label to the ble structure
+ */
 bleController::cmdStatus bleController::parseCmdSetLabel(std::stringstream& ss, bleMsg& msg)
 {
-	int label;
+	uint32_t label;
 	if (ss >> label)
 	{
-		msg.label = static_cast<uint8_t>(label);
+		msg.label = label;
 		return CMD_VALID;
 	}
     return CMD_INVALID;
 }
 
+/*!
+ * @brief : This function fetches the current label information
+ */
+bleController::cmdStatus bleController::parseCmdGetLabelInfo(std::stringstream& ss, bleMsg& msg)
+{
+	return CMD_VALID;
+}
+
+/*!
+ * @brief : This function updates the received label information to the ble structure
+ */
+bleController::cmdStatus bleController::parseCmdSetLabelInfo(std::stringstream& ss, bleMsg& msg)
+{
+	uint32_t label;
+	std::string lblName, lblDesc;
+
+	if (ss >> label)
+	{
+		msg.labelInfo.label = label;
+		/* read label name until comma */
+		if (std::getline(ss, lblName, ','))
+		{
+			lblName.erase(lblName.begin());
+			if (lblName.length() > LABEL_NAME_SIZE)
+			{
+				return MAX_LABEL_NAME_REACHED;
+			}
+			memset(msg.labelInfo.labelName, 0, LABEL_NAME_SIZE+1);
+			strncpy(msg.labelInfo.labelName, lblName.c_str(), LABEL_NAME_SIZE-1);
+			/* read label description until dot */
+			if(std::getline(ss, lblDesc, '.'))
+			{
+				if (lblDesc.length() > LABEL_DESC_SIZE)
+				{
+					return MAX_LABEL_DESCRIPTION_REACHED;
+				}
+				memset(msg.labelInfo.labelDesc, 0, LABEL_DESC_SIZE+1);
+				strncpy(msg.labelInfo.labelDesc, lblDesc.c_str(), LABEL_DESC_SIZE-1);
+				return CMD_VALID;
+			}
+		}
+	}
+    return CMD_INVALID;
+}
+
+/*!
+ * @brief : This function launches sensor data or sensor data and BSEC output streaming through ble
+ *			based on the app mode
+ */
 bleController::cmdStatus bleController::parseCmdStartStreaming(std::stringstream& ss, bleMsg& msg)
 {
 	int sensorNum, sampleRate, outputId;
@@ -153,7 +216,69 @@ bleController::cmdStatus bleController::parseCmdStartStreaming(std::stringstream
     return CMD_INVALID;
 }
 
+/*!
+ * @brief : This function stops ble streaming
+ */
 bleController::cmdStatus bleController::parseCmdStopStreaming(std::stringstream& ss, bleMsg& msg)
+{
+	return CMD_VALID;
+}
+
+/*!
+ * @brief : This function launches the config file data through ble
+ */
+bleController::cmdStatus bleController::parseCmdReadConfig(std::stringstream& ss, bleMsg& msg)
+{
+	int fileType;
+	if (ss >> fileType)
+	{
+		msg.fileType = static_cast<configFile>(fileType);
+		return CMD_VALID;
+	}
+	return CMD_INVALID;
+}
+
+/*!
+ * @brief : This function updates the current Appmode
+ */
+bleController::cmdStatus bleController::parseCmdSetAppmode(std::stringstream& ss, bleMsg& msg)
+{
+	int mode;
+	if (ss >> mode)
+	{
+		msg.mode = static_cast<uint8_t>(mode);
+		return CMD_VALID;
+	}
+	return CMD_INVALID;
+}
+
+/*!
+ * @brief : This function retrieves the current Appmode through ble
+ */
+bleController::cmdStatus bleController::parseCmdGetAppmode(std::stringstream& ss, bleMsg& msg)
+{
+	return CMD_VALID;
+}
+
+
+/*!
+ * @brief : This function updates the Groundtruth
+ */
+bleController::cmdStatus bleController::parseCmdSetGroundtruth(std::stringstream& ss, bleMsg& msg)
+{
+	int	groundTruth;;
+	if (ss >> groundTruth)
+	{
+		msg.groundTruth = static_cast<uint32_t>(groundTruth);
+		return CMD_VALID;
+	}
+	return CMD_INVALID;
+}
+
+/*!
+* @brief : This function retrieves the current firmware version through ble
+*/
+bleController::cmdStatus bleController::parseCmdGetFwVersion(std::stringstream& ss, bleMsg& msg)
 {
 	return CMD_VALID;
 }
@@ -198,6 +323,24 @@ void bleController::onWrite(BLECharacteristic *pCharacteristic)
 		
 		jsonDoc[cmdName.c_str()] = status;
 		sendNotification(jsonDoc);
+	}
+}
+
+/*!
+ * @brief : This function checks the ble connection status, restarts advertising if disconnected
+ */
+void bleController::checkBleConnectionSts()
+{
+	/* disconnecting */
+    if (!deviceConnected && oldDeviceConnected)
+	{
+        pServer->startAdvertising(); /* restart advertising, when ble is disconnected */
+        oldDeviceConnected = deviceConnected;
+    }
+    /* connecting */
+    if (deviceConnected && !oldDeviceConnected)
+	{
+        oldDeviceConnected = deviceConnected;
 	}
 }
 

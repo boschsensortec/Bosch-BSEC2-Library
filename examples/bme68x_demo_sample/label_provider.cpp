@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	    label_provider.cpp
- * @date	    22 June 2022
- * @version	    1.5.5
+ * @date		17 January 2023
+ * @version		2.0.6
  * 
  * @brief       label provider
  *
@@ -77,9 +77,9 @@ void labelProvider::begin()
 void labelProvider::isrButton1()
 {
     /* check if button is pressed or idle */
-    if (_but1Pressed == false)
+	if (_but1Pressed == false)
     {
-        /* determine if only this button or both are pressed and set helper button label */
+		/* determine if only this button or both are pressed and set helper button label */
         _but1Pressed = true;
         if (_but2Pressed)
         {
@@ -92,7 +92,7 @@ void labelProvider::isrButton1()
     }
     else
     {
-        /* if both buttons are released, user label according to helper button label */
+		/* if both buttons are released, user label according to helper button label */
         _but1Pressed = false;
         if (!_but2Pressed)
         {
@@ -138,4 +138,3 @@ bool labelProvider::getLabel(gasLabel &label)
 {
 	return xQueueReceive(_queue, &label, 0);
 }
-

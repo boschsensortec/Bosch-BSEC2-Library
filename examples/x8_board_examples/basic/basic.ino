@@ -21,8 +21,8 @@
 #include "commMux.h"
 
 /* Macros used */
-/* sensors are numbered 0-7 */
-#define SENS_NUM    0
+/* Number of sensors to operate*/
+#define NUM_OF_SENS    8
 #define PANIC_LED   LED_BUILTIN
 #define ERROR_DUR   1000
 
@@ -46,9 +46,11 @@ void checkBsecStatus(Bsec2 bsec);
  */
 void newDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bsec);
 
-/* Create an object of the class Bsec2 */
-Bsec2 envSensor;
-commMux communicationSetup;
+/* Create an array of objects of the class Bsec2 */
+Bsec2 envSensor[NUM_OF_SENS];
+commMux communicationSetup[NUM_OF_SENS];
+uint8_t bsecMemBlock[NUM_OF_SENS][BSEC_INSTANCE_SIZE];
+uint8_t sensor = 0;
 
 /* Entry point for the example */
 void setup(void)
@@ -71,30 +73,36 @@ void setup(void)
     delay(100);
     /* Valid for boards with USB-COM. Wait until the port is open */
     while(!Serial) delay(10);
-
-    /* Sets the Communication interface for the given sensor */
-    communicationSetup = commMuxSetConfig(Wire, SPI, SENS_NUM, communicationSetup);
     
-    /* Initialize the library and interfaces */
-    if (!envSensor.begin(BME68X_SPI_INTF, commMuxRead, commMuxWrite, commMuxDelay, &communicationSetup))
-    {
-        checkBsecStatus (envSensor);
-    }
+    for (uint8_t i = 0; i < NUM_OF_SENS; i++)
+    {        
+        /* Sets the Communication interface for the sensors */
+        communicationSetup[i] = commMuxSetConfig(Wire, SPI, i, communicationSetup[i]);
 
-    /* Subsribe to the desired BSEC2 outputs */
-    if (!envSensor.updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_LP))
-    {
-        checkBsecStatus (envSensor);
-    }
+        /* Assigning a chunk of memory block to the bsecInstance */
+         envSensor[i].allocateMemory(bsecMemBlock[i]);
 
-    /* Whenever new data is available call the newDataCallback function */
-    envSensor.attachCallback(newDataCallback);
+        /* Initialize the library and interfaces */
+        if (!envSensor[i].begin(BME68X_SPI_INTF, commMuxRead, commMuxWrite, commMuxDelay, &communicationSetup[i]))
+        {
+            checkBsecStatus (envSensor[i]);
+        }
+
+        /* Subscribe to the desired BSEC2 outputs */
+        if (!envSensor[i].updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_LP))
+        {
+            checkBsecStatus (envSensor[i]);
+        }
+
+        /* Whenever new data is available call the newDataCallback function */
+        envSensor[i].attachCallback(newDataCallback);
+    }
 
     Serial.println("BSEC library version " + \
-            String(envSensor.version.major) + "." \
-            + String(envSensor.version.minor) + "." \
-            + String(envSensor.version.major_bugfix) + "." \
-            + String(envSensor.version.minor_bugfix));
+            String(envSensor[0].version.major) + "." \
+            + String(envSensor[0].version.minor) + "." \
+            + String(envSensor[0].version.major_bugfix) + "." \
+            + String(envSensor[0].version.minor_bugfix));
 }
 
 /* Function that is looped forever */
@@ -104,9 +112,12 @@ void loop(void)
      * check if it is time to read new data from the sensor  
      * and process it.
      */
-    if (!envSensor.run())
+    for (sensor = 0; sensor < NUM_OF_SENS; sensor++)
     {
-        checkBsecStatus(envSensor);
+        if (!envSensor[sensor].run())
+        {
+         checkBsecStatus(envSensor[sensor]);
+        }
     }
 }
 
@@ -128,7 +139,8 @@ void newDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bse
         return;
     }
 
-    Serial.println("BSEC outputs:\n\ttimestamp = " + String((int) (outputs.output[0].time_stamp / INT64_C(1000000))));
+    Serial.println("BSEC outputs:\n\tsensor num = " + String(sensor));
+    Serial.println("\ttimestamp = " + String((int) (outputs.output[0].time_stamp / INT64_C(1000000))));
     for (uint8_t i = 0; i < outputs.nOutputs; i++)
     {
         const bsecData output  = outputs.output[i];

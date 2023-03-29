@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	label_provider.h
- * @date	22 June 2022
- * @version	1.5.5
+ * @date	17 January 2023
+ * @version	2.0.6
  * 
  * @brief	Header file for the label provider
  * 
@@ -48,8 +48,12 @@
 #include <freertos/queue.h>
 
 /* Pins connected to interrupt buttons */
-#define PIN_BUTTON_1 			14
-#define PIN_BUTTON_2 			32
+#define PIN_BUTTON_1 			    32
+#define PIN_BUTTON_2 			    14
+#define LABEL_NAME_SIZE             50
+#define LABEL_DESC_SIZE      	    200
+#define LABEL_TAG_MAX_RANGE         2147483647
+#define LABEL_TAG_MIN_RANGE         1001
 
 enum gasLabel
 {

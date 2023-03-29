@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2023 Bosch Sensortec GmbH. All rights reserved.
+ * Copyright (c) 2021 Bosch Sensortec GmbH. All rights reserved.
  *
  * BSD-3-Clause
  *
@@ -31,15 +31,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	bsec2.h
- * @date	18 Jan 2023
- * @version	1.4.0
+ * @date	17 January 2023
+ * @version	2.0.6
  *
  */
 
 #ifndef BSEC2_H_
 #define BSEC2_H_
-
-#define BME68X_PERIOD_POLL				UINT32_C(5000)
 
 /* Includes */
 #include "Arduino.h"
@@ -49,14 +47,16 @@
 /* dependent library header */
 #include "bme68xLibrary.h"
 #include "inc/bsec_datatypes.h"
-#include "inc/bsec_interface.h"
+#include "inc/bsec_interface_multi.h"
 
 #ifndef ARRAY_LEN
 #define ARRAY_LEN(array)				(sizeof(array)/sizeof(array[0]))
 #endif
 
-#define BSEC_CHECK_INPUT(x, shift)		(x & (1 << (shift-1)))
-#define BSEC_TOTAL_HEAT_DUR             UINT16_C(140)
+#define BSEC_CHECK_INPUT(x, shift)		    (x & (1 << (shift-1)))
+#define BSEC_TOTAL_HEAT_DUR                 UINT16_C(140)
+#define BSEC_INSTANCE_SIZE                  3272
+#define BSEC_E_INSUFFICIENT_INSTANCE_SIZE   (bsec_library_return_t)-105
 
 typedef bsec_output_t bsecData;
 typedef bsec_virtual_sensor_t bsecSensor;
@@ -68,10 +68,9 @@ typedef struct
 } bsecOutputs;
 
 class Bsec2;
-
 typedef void (*bsecCallback)(const bme68xData data, const bsecOutputs outputs, const Bsec2 bsec);
 
-/* BSEC class definition */
+/* BSEC2 class definition */
 class Bsec2
 {
 public:
@@ -148,10 +147,10 @@ public:
      * @brief Function to get the BSEC output by sensor id
      * @return	pointer to BSEC output, nullptr otherwise
      */
-    const bsecData getData(bsecSensor id)
+    bsecData getData(bsecSensor id)
     {
-        const bsecData emp =
-        { 0 };
+        bsecData emp;
+        memset(&emp, 0, sizeof(emp));
         for (uint8_t i = 0; i < outputs.nOutputs; i++)
             if (id == outputs.output[i].sensor_id)
                 return outputs.output[i];
@@ -200,6 +199,18 @@ public:
      */
     int64_t getTimeMs(void);
 
+    /**
+     * @brief Function to assign the memory block to the bsec instance
+     * 
+     * @param[in] memBlock : reference to the memory block
+     */
+    void allocateMemory(uint8_t (&memBlock)[BSEC_INSTANCE_SIZE]);
+
+    /**
+     * @brief Function to de-allocate the dynamically allocated memory
+     */
+    void clearMemory(void);
+
 private:
     bsec_bme_settings_t bmeConf;
 
@@ -216,6 +227,8 @@ private:
     uint32_t ovfCounter;
     
     uint32_t lastMillis;
+    /* Pointer to hold the address of the instance */
+    uint8_t *bsecInstance;
 
     /**
      * @brief Reads the data from the BME68x sensor and process it

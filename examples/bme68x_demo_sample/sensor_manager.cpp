@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	    sensor_manager.cpp
- * @date	    22 June 2022
- * @version		1.5.5
+ * @date		17 January 2023
+ * @version		2.0.6
  * 
  * @brief    	sensor manager
  *
@@ -203,32 +203,32 @@ demoRetCode sensorManager::begin(const String& configName)
     {
         /* save config information to sensor profile */
         uint8_t sensorNumber = devicefig["sensorIndex"].as<uint8_t>();
-
 		bme68xSensor* sensor = getSensor(sensorNumber);
 		if(sensor == nullptr)
 		{
 			return EDK_SENSOR_MANAGER_SENSOR_INDEX_ERROR;
 		}
 
-        String heaterProfileStr = devicefig["heaterProfile"].as<String>();
-        String dutyCycleStr = devicefig["dutyCycleProfile"].as<String>();
-        
+		String heaterProfileStr = devicefig["heaterProfile"].as<String>();
+		String dutyCycleStr = devicefig["dutyCycleProfile"].as<String>();
+		
 		sensor->isConfigured = false;
 		sensor->wakeUpTime = 0;
 		sensor->mode = BME68X_SLEEP_MODE;
 		sensor->cyclePos = 0;
 		sensor->nextGasIndex = 0;
-        sensor->i2cMask = ((0x01 << sensorNumber) ^ 0xFF);
+		sensor->i2cMask = ((0x01 << sensorNumber) ^ 0xFF);
+		sensor->scanCycleIndex = 1;
 		
-        /* initialize the sensor */
-        bme68xRslt = initializeSensor(sensorNumber, sensor->id);
+		/* initialize the sensor */
+		bme68xRslt = initializeSensor(sensorNumber, sensor->id);
 		if (bme68xRslt != BME68X_OK)
 		{
 			return EDK_BME68X_DRIVER_ERROR;
 		}		
 
-        /* set the heater profile */
-        bme68xRslt = setHeaterProfile(heaterProfileStr, dutyCycleStr, sensor->heaterProfile, sensorNumber);
+		/* set the heater profile */
+		bme68xRslt = setHeaterProfile(heaterProfileStr, dutyCycleStr, sensor->heaterProfile, sensorNumber);
 		if (bme68xRslt != BME68X_OK)
 		{
 			return EDK_BME68X_DRIVER_ERROR;
@@ -248,7 +248,6 @@ demoRetCode sensorManager::collectData(uint8_t num, bme68x_data* data[3])
 	int8_t bme68xRslt = BME68X_OK;
 	
 	data[0] = data[1] = data[2] = nullptr;
-	
 	bme68xSensor* sensor = getSensor(num);
 	if(sensor == nullptr)
 	{
@@ -299,7 +298,7 @@ demoRetCode sensorManager::collectData(uint8_t num, bme68x_data* data[3])
 						sensor->nextGasIndex = 0;
 						if (++sensor->cyclePos >= sensor->heaterProfile.nbRepetitions)
 						{
-							sensor->cyclePos = 0; 
+							sensor->cyclePos = 0;
 							sensor->mode = BME68X_SLEEP_MODE;
 							sensor->wakeUpTime = utils::getTickMs() + sensor->heaterProfile.sleepDuration;
 							bme68xSensors[num].setOpMode(BME68X_SLEEP_MODE);
@@ -324,4 +323,3 @@ demoRetCode sensorManager::collectData(uint8_t num, bme68x_data* data[3])
 	}
 	return retCode;
 }
-

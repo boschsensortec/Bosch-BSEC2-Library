@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	demo_app.h
- * @date	22 June 2022
- * @version	1.5.5
+ * @date	17 January 2023
+ * @version	2.0.6
  * 
  * @brief	Header file for the bosch application definitions
  * 
@@ -44,16 +44,16 @@
 
 #include "bsec2.h"
 
-#define FIRMWARE_VERSION 				"1.5.5"
+#define FIRMWARE_VERSION 		"2.0.6"
 
 /*!
  * @brief Enumeration for demo app mode
  */
 enum demoAppMode
 {
-	DEMO_IDLE_MODE,
-	DEMO_DATALOGGER_MODE,
-	DEMO_BLE_STREAMING_MODE
+	DEMO_RECORDING_MODE,
+	DEMO_TEST_ALGORITHM_MODE,
+	DEMO_IDLE_MODE
 };
 
 /*!
@@ -61,6 +61,14 @@ enum demoAppMode
  */
 enum demoRetCode
 {
+	EDK_LABEL_NOT_FOUND = -28,
+	EDK_DATALOGGER_LABEL_INFO_FILE_ERROR = -27,
+	EDK_DATALOGGER_AI_CONFIG_FILE_ERROR = -26,
+	EDK_SENSOR_INITIALIZATION_FAILED = -25,
+	EDK_EXTENSION_NOT_AVAILABLE = -24,
+	EDK_END_OF_FILE = -23,
+	EDK_FILE_OPEN_ERROR = -22,
+	EDK_BUFFER_DATA_ERROR = -21,
 	EDK_BLE_CONTROLLER_FULL_QUEUE = -20,
 	EDK_BLE_CONTROLLER_INVALID_CMD = -19,
 	EDK_BLE_CONTROLLER_OUT_OF_RANGE = -18,
@@ -86,16 +94,14 @@ enum demoRetCode
 	EDK_BSEC_CONFIG_STR_SIZE_ERROR = -3,
 	
 	EDK_SD_CARD_INIT_ERROR = -2,
-	EDK_SENSOR_CONFIG_FILE_ERROR = -1,
+	EDK_SENSOR_CONFIG_MISSING_ERROR = -1,
 	
 	EDK_OK = 0,
 	
 	EDK_SENSOR_MANAGER_DATA_MISS_WARNING = 1,
 	
 	EDK_DATALOGGER_RTC_BEGIN_WARNING = 2,
-	EDK_DATALOGGER_RTC_ADJUST_WARNING = 3,
-	
-	EDK_BUFFER_DATA_ERROR = -21
+	EDK_DATALOGGER_RTC_ADJUST_WARNING = 3	
 };
 
 /*!
@@ -125,6 +131,7 @@ struct bme68xSensor
 	uint8_t cyclePos;
 	uint8_t nextGasIndex;
 	int8_t i2cMask;
+	uint32_t scanCycleIndex;
 };
 
 #endif

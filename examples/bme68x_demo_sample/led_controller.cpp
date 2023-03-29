@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	    led_controller.cpp
- * @date	    22 June 2022
- * @version		1.5.5
+ * @date		17 January 2023
+ * @version		2.0.6
  * 
  * @brief    	led controller
  *
@@ -46,7 +46,9 @@
  * @brief The constructor of the led_controller class
  */
 ledController::ledController()
-{}
+{
+	previousRetCode = EDK_OK;
+}
 
 /*!
  * @brief This function initializes the led controller module
@@ -94,7 +96,11 @@ void ledController::update(demoRetCode retcode)
 	}
 	else
 	{
+		if (retcode != previousRetCode)
+		{
+			Serial.println("Error code = " + String((int) retcode));
+			previousRetCode = retcode;
+		}
 		switchLed(LED_ERROR_PERIOD);
 	}
 }
-

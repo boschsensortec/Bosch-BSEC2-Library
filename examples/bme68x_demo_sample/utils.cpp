@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	    utils.cpp
- * @date	    22 June 2022
- * @version		1.5.5
+ * @date		17 January 2023
+ * @version		2.0.6
  * 
  * @brief    	utils
  *
@@ -43,6 +43,7 @@
 
 /* own header include */
 #include "utils.h"
+#include <ArduinoJson.h>
 #include <math.h>
 
 uint64_t 	utils::_tickMs;
@@ -50,6 +51,8 @@ uint64_t 	utils::_tickOverFlowCnt;
 SdFat		utils::_sd;
 RTC_PCF8523 utils::_rtc;
 char 		utils::_fileSeed[DATA_LOG_FILE_SEED_SIZE];
+unsigned long 	utils::_fileDataPos = 0;
+bool		utils::_isConfAvailable;
 
 /*!
  * @brief This function creates the random alphanumeric file seed for the log file
@@ -160,7 +163,7 @@ bool utils::getFileWithExtension(String& fName, const String& extension)
 	File root;
 	File file;
 	char fileName[90];
-		
+	
 	if (root.open("/"))
 	{
 		while (file.openNext(&root, O_READ))
@@ -171,15 +174,50 @@ bool utils::getFileWithExtension(String& fName, const String& extension)
 				if (String(fileName).endsWith(extension))
 				{
 					file.close();
-					
 					fName = String(fileName);
 					return true;
 				}
 			}
-			file.close();  
+			file.close();
 		}
 	}
 	return false;
+}
+
+/*!
+ * @brief This function retrieves the latest file with provided file extension
+ */
+bool utils::getLatestFileWithExtension(String& fName, const String& extension)
+{
+	File root;
+	File file;
+	char fileName[90];
+	bool flag = false;
+	if (root.open("/"))
+	{		
+		while (file.openNext(&root, O_READ))
+		{
+			if (file.isFile())
+			{
+				file.getName(fileName, sizeof(fileName));
+				if (String(fileName).endsWith(extension))
+				{
+					file.close();
+					fName = String(fileName);
+					flag = true;
+				}
+			}
+			file.close();
+		}
+	}
+	if (flag)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }
 
 /*!
@@ -215,11 +253,61 @@ demoRetCode utils::getBsecConfig(const String& fileName, uint8_t configStr[BSEC_
  */
 uint64_t utils::getTickMs(void)
 {
-	uint64_t timeMs = millis(); /* An overflow occurred */
-	if (_tickMs > timeMs) 
+	uint64_t timeMs = millis();
+	if (_tickMs > timeMs) /* An overflow occurred */
 	{ 
 		_tickOverFlowCnt++;
 	}
 	_tickMs = timeMs;
 	return timeMs + (_tickOverFlowCnt * INT64_C(0xFFFFFFFF));
+}
+
+/*!
+ * @brief : This function reads the size of bytes from the file of given fileExtension
+ */
+demoRetCode utils::readFile(const String& fileExtension, size_t size, char *fileData)
+{
+	File file;
+	demoRetCode retCode;
+	static String fileName;
+	static bool firstTime = true;
+	memset(fileData, 0, size); /* Clears the previous data if any */
+	retCode = utils::begin(); /* Initializes the SD card module */
+
+	if (retCode >= EDK_OK)
+	{
+		if (firstTime)
+		{
+			if (fileExtension == BME68X_LABEL_INFO_FILE_EXT)
+			{
+				_isConfAvailable = utils::getLatestFileWithExtension(fileName, fileExtension); /* check for a file with given extension */
+			}
+			else
+			{
+				_isConfAvailable = utils::getFileWithExtension(fileName, fileExtension); /* check for a file with given extension */
+			}
+		}
+		if (_isConfAvailable)
+		{
+			if (!file.open(fileName.c_str(), O_READ)) /* open the given file in read mode */
+			{
+				return EDK_FILE_OPEN_ERROR;
+			}
+			firstTime = false;
+			file.seek(_fileDataPos); /* sets the position of the file to a particular byte */
+			if (file.available())
+			{
+				file.read(fileData, size); /* reads the given number of bytes of data */
+				_fileDataPos = file.position(); /* save the file position indicator for next read */
+				file.close(); /* closes the file */
+				return EDK_OK;
+			}
+			file.close();
+			_fileDataPos = 0; /* resets the file position indicator */
+			firstTime = true;
+			return EDK_END_OF_FILE;
+		}
+		return EDK_EXTENSION_NOT_AVAILABLE;
+	}
+	return retCode;
 }

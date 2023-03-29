@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	utils.h
- * @date	22 June 2022
- * @version	1.5.5
+ * @date	17 January 2023
+ * @version	2.0.6
  * 
  * @brief	Header file for the datalogger utils
  * 
@@ -48,13 +48,16 @@
 #include "demo_app.h"
 
 #define BME68X_RAWDATA_FILE_EXT 		".bmerawdata"
+#define BME68X_LABEL_INFO_FILE_EXT 		".bmelabelinfo"
 #define BME68X_CONFIG_FILE_EXT 			".bmeconfig"
-#define BSEC_DATA_FILE_EXT 				".bsecdata"
 #define BSEC_CONFIG_FILE_EXT 			".config"
+#define AI_CONFIG_FILE_EXT 				".aiconfig"
+#define AI_DATA_FILE_EXT 				".aipredictions"
 #define FILE_SIZE_LIMIT 				311427072
 #define TIMEZONE						2.0
 #define DATA_LOG_FILE_SEED_SIZE 		17
 #define PIN_SD_CS 						33
+
 
 class utils
 {
@@ -64,6 +67,10 @@ private:
 	static SdFat		_sd;
 	static RTC_PCF8523 	_rtc;
 	static char 		_fileSeed[DATA_LOG_FILE_SEED_SIZE];
+	static unsigned long _fileDataPos;
+	static bool			_isConfAvailable;
+
+
 	
 	/*!
 	 * @brief : This function creates the random alphanumeric file seed for the log file
@@ -121,6 +128,16 @@ public:
 	static bool getFileWithExtension(String& fName, const String& extension);
 	
 	/*!
+	 * @brief : This function retrieves the latest file with provided file extension
+	 * 
+	 * @param[out] fName	: the filename found
+	 * @param[in] extension	: the file extension
+	 *
+	 * @return the date string
+	 */
+	static bool getLatestFileWithExtension(String& fName, const String& extension);
+
+	/*!
 	 * @brief : This function retrives the bsec configuration string from the provided file
 	 * 
 	 * @param[in] fileName	: the bsec configuration filename
@@ -136,6 +153,16 @@ public:
 	 * @return tick value in milliseconds
 	 */
 	static uint64_t getTickMs(void);
-};
 
+	/*!
+	 * @brief : This function reads size of bytes from the file of given fileExtension
+	 *
+	 * @param[in] fileExtension	: file extension to search for a file in SD card
+	 * @param[in] size			: number of bytes to read
+	 * @param[in] fileData		: pointer to store the read data
+	 *
+	 * @return	a bosch return code
+	 */
+	static demoRetCode readFile(const String& fileExtension, size_t size, char *fileData);
+};
 #endif

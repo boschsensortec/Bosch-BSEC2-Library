@@ -73,8 +73,9 @@
 #endif
 
 
- /*! @addtogroup bsec_interface BSEC C Interface
- *   @brief Interfaces of BSEC signal processing library
+ /*! @addtogroup bsec_interface BSEC Standard Interfaces
+ *   @brief Standard interfaces of BSEC signal processing library. 
+ * These interfaces supports in interfacing single BME68x sensor with the BSEC library.
  *
  * ### Interface usage
  * 

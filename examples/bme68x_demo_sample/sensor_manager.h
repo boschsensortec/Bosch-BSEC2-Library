@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	sensor_manager.h
- * @date	22 June 2022
- * @version	1.5.5
+ * @date	17 January 2023
+ * @version	2.0.6
  * 
  * @brief	Header file for the sensor manager
  * 

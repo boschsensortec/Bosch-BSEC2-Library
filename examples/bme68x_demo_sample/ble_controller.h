@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	ble_controller.h
- * @date	22 June 2022
- * @version	1.5.5
+ * @date	    17 January 2023
+ * @version		2.0.6
  * 
  * @brief	Header file for the ble controller
  * 
@@ -61,8 +61,12 @@
 #define CHARACTERISTIC_UUID_RX 		"6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
 #define CHARACTERISTIC_UUID_TX 		"6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
 #define BLE_MSG_QUEUE_LEN			3
-#define BLE_JSON_DOC_SIZE			1500
-#define BLE_CONTROLLER_NOTIF_SIZE	155
+#define BLE_JSON_DOC_SIZE			2048
+#define BLE_CONTROLLER_NOTIF_SIZE	600
+#define BLE_MAX_MTU_SIZE			512
+
+static bool deviceConnected = false;
+static bool oldDeviceConnected = false;
 
 /*!
  * @brief Class library for the ble controller
@@ -86,7 +90,22 @@ public:
 		BSEC_UPDATE_SUBSCRIPTION_ERROR,
 		BSEC_RUN_ERROR,
 		BSEC_OUTPUT_EXCESS_ERROR,
-		SENSOR_CONFIG_MISSING
+		SENSOR_CONFIG_MISSING,
+		SENSOR_INITIALIZATION_FAILED,
+		SD_CARD_INIT_ERROR,
+		CONFIG_FILE_ERROR,
+		APP_ALREADY_IN_STREAMING_MODE,
+		SENSOR_READ_ERROR,
+		BSEC_CONFIG_FILE_MISSING,
+		AI_CONFIG_FILE_MISSING,
+		LABEL_INFO_FILE_MISSING,
+		INVALID_APP_MODE,
+		LABEL_FILE_OPEN_FAILED,
+		MAX_LABEL_NAME_REACHED,
+		MAX_LABEL_DESCRIPTION_REACHED,
+		FILE_OPEN_ERROR,
+		DESERIALIZATION_FAILED,
+		LABEL_NOT_FOUND
 	};
 	
 	/*!
@@ -100,16 +119,31 @@ public:
 	};
 
 	/*!
+	 * @brief config file type enumeration
+	 */
+	enum configFile
+	{
+		BMECONFIG,
+		AICONFIG
+	};
+
+	/*!
 	 * @brief bluetooth message id enumeration
 	 */
 	enum bleMsgId
 	{
-		GET_LABEL,
+		GET_LABEL_INFO,
+		SET_LABEL_INFO,
 		SET_LABEL,
 		GET_RTC_TIME,
 		SET_RTC_TIME,
 		START_STREAMING,
-		STOP_STREAMING
+		STOP_STREAMING,
+		READ_CONFIG,
+		SET_APPMODE,
+		GET_APPMODE,
+		SET_GROUNDTRUTH,
+		GET_FW_VERSION
 	};
 	
 	/*!
@@ -124,6 +158,17 @@ public:
 	};
 	
 	/*!
+	 * @brief label information
+	 */
+	struct bleLabelInfo
+	{
+		uint32_t	 	label;
+		char labelName[LABEL_NAME_SIZE + 1];
+		char labelDesc[LABEL_DESC_SIZE + 1];
+	};
+	
+	
+	/*!
 	 * @brief bluetooth message structure
 	 */
 	struct bleMsg
@@ -132,9 +177,13 @@ public:
 		bleMsgId id;
 		union
 		{
-			bleBsecMsg	bsec;
-			uint8_t 		label;
+			bleBsecMsg		bsec;
+			uint32_t	 	label;
 			uint32_t		rtcTime;
+			configFile		fileType;
+			uint8_t			mode;
+			bleLabelInfo    labelInfo;
+			uint32_t		groundTruth;
 		};
 	};
 	
@@ -151,8 +200,7 @@ public:
 	typedef void (*bleCallBack)(const bleMsg &msg, JsonDocument& jsonDoc);
 	
     /*!
-     * @brief : The constructor of the bleController class
-     *        ceates an instance of the class
+     * @brief : The constructor of the bleController class creates an instance of the class
 	 * 
 	 * @param[in] callBack : ble callBack called when a message is dequeued.
      */
@@ -185,6 +233,11 @@ public:
 	 *		   	 It will read in the sent bluetooth command.
 	 */
 	void onWrite(BLECharacteristic *pCharacteristic);
+
+	/*!
+	 * @brief : This function checks the ble connection status, restarts advertising if disconnected
+	 */
+	void checkBleConnectionSts();
 	
 private:
 	bleCallBack						_callBack;
@@ -192,6 +245,7 @@ private:
 	static QueueHandle_t 			msgQueue;
 	static bleCmd					cmdList[];
 	static BLECharacteristic		*bleCharTx, *bleCharRx;
+	static BLEServer 				*pServer;
 
 	/*!
 	 * @brief : This function fetches the RTC time which is requested through ble command
@@ -205,17 +259,23 @@ private:
 	static cmdStatus parseCmdSetRtcTime(std::stringstream& ss, bleMsg& msg);
 
 	/*!
-	 * @brief : This function fetches the current class label
+	 * @brief : This function fetches the current label information from the .bmelabelinfo file
 	 */
-	static cmdStatus parseCmdGetLabel(std::stringstream& ss, bleMsg& msg);
+	static cmdStatus parseCmdGetLabelInfo(std::stringstream& ss, bleMsg& msg);
 
 	/*!
 	 * @brief : This function updates the received label information to the ble structure
 	 */
-	static cmdStatus parseCmdSetLabel(std::stringstream& ss, bleMsg& msg);
+	static cmdStatus parseCmdSetLabelInfo(std::stringstream& ss, bleMsg& msg);
 
 	/*!
-	 * @brief : This function launches sensor data and BSEC output streaming through ble
+	 * @brief : This function updates the received label to the ble structure
+	 */
+	static cmdStatus parseCmdSetLabel(std::stringstream& ss, bleMsg& msg);
+	
+	/*!
+	 * @brief : This function launches sensor data or sensor data and BSEC output streaming through ble
+	 *			based on the app mode
 	 */
 	static cmdStatus parseCmdStartStreaming(std::stringstream& ss, bleMsg& msg);
 	
@@ -223,6 +283,44 @@ private:
 	 * @brief : This function stops ble streaming
 	 */
 	static cmdStatus parseCmdStopStreaming(std::stringstream& ss, bleMsg& msg);
+	
+	/*!
+	 * @brief : This function launches the config file data through ble
+	 */
+	static cmdStatus parseCmdReadConfig(std::stringstream& ss, bleMsg& msg);
+
+	/*!
+	 * @brief : This function updates the current Appmode
+	 */
+	static cmdStatus parseCmdSetAppmode(std::stringstream& ss, bleMsg& msg);
+
+	/*!
+	 * @brief : This function retrieves the current Appmode through ble
+	 */
+	static cmdStatus parseCmdGetAppmode(std::stringstream& ss, bleMsg& msg);
+
+	/*!
+	 * @brief : This function updates the Groundtruth through ble
+	 */
+	static cmdStatus parseCmdSetGroundtruth(std::stringstream& ss, bleMsg& msg);
+
+	/*!
+	 * @brief : This function retrieves the current firmware version through ble
+	 */
+	static cmdStatus parseCmdGetFwVersion(std::stringstream& ss, bleMsg& msg);
+};
+
+class serverCallbacks: public BLEServerCallbacks
+{
+	void onConnect(BLEServer* pServer)
+	{
+		deviceConnected = true;
+	}
+
+	void onDisconnect(BLEServer* pServer)
+	{
+		deviceConnected = false;
+	}
 };
 
 #endif

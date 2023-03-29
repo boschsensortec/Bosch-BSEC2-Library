@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	bme68x_datalogger.h
- * @date	22 June 2022
- * @version	1.5.5
+ * @date	17 January 2023
+ * @version	2.0.6
  * 
  * @brief	Header file for the bme68x datalogger
  * 
@@ -51,6 +51,10 @@
 #include "demo_app.h"
 #include "label_provider.h"
 #include <sstream>
+#include <iostream>
+#include <ArduinoJson.h>
+
+#define DOC_SIZE	50000
 
 /*!
  * @brief : Class library that holds functionality of the bme68x datalogger
@@ -58,10 +62,10 @@
 class bme68xDataLogger
 {
 private:
-	String _configName, _logFileName;
+	String _configName, _logFileName, _labelFileName;
 	std::stringstream _ss;
 	unsigned long _sensorDataPos = 0;
-    int _fileCounter = 0;
+    int _fileCounter = 1;
     bool _endOfLine = false;
 		
 	/*!
@@ -70,8 +74,17 @@ private:
      * @return  bosch error code
 	 */
 	demoRetCode createLogFile();
+
+	/*!
+	 * @brief : This function creates a bme68x label information file with .bmelabelinfo extension
+	 * 
+     * @return  bosch error code
+	 */
+	demoRetCode createLabelInfoFile();
 public:
-    /*!
+    StaticJsonDocument<DOC_SIZE>	labelDoc;
+	
+	/*!
      * @brief : The constructor of the bme68xDataLogger class
      *        	Creates an instance of the class
      */
@@ -96,17 +109,28 @@ public:
 	/*!
 	 * @brief : This function writes the sensor data to the current log file.
 	 * 
-	 * @param[in] num 		: sensor number
-	 * @param[in] sensorId 	: pointer to sensor id, if NULL a null json object is inserted
-	 * @param[in] sensorMode: pointer to sensor operation mode, if NULL a null json object is inserted
-	 * @param[in] bme68xData: pointer to bbme68x data, if NULL a null json object is inserted
-	 * @param[in] label 	: class label
-	 * @param[in] code 		: application return code
+	 * @param[in] num 				: sensor number
+	 * @param[in] sensorId 			: pointer to sensor id, if NULL a null json object is inserted
+	 * @param[in] sensorMode		: pointer to sensor operation mode, if NULL a null json object is inserted
+	 * @param[in] bme68xData		: pointer to bme68x data, if NULL a null json object is inserted
+	 * @param[in] scanCycleIndex	: pointer to sensor scanning cycle index
+	 * @param[in] label 			: class label
+	 * @param[in] code 				: application return code
      * 
      * @return  bosch error code
 	 */
     demoRetCode writeSensorData(const uint8_t* num, const uint32_t* sensorId, const uint8_t* sensorMode, 
-												const bme68x_data* bme68xData, gasLabel label, demoRetCode code);
+												const bme68x_data* bme68xData, const uint32_t* scanCycleIndex, gasLabel label, demoRetCode code);
+	/*!
+	 * @brief : This function stores the labelTag, labelName and labelDescription to the .bmelabelinfo file.
+	 * 
+	 * @param[in] labelTag 	: label tag
+	 * @param[in] labelName : reference to the label name
+	 * @param[in] labelDesc	: reference to the label description
+	 * 
+     * @return  bosch error code
+	 */											
+	demoRetCode setLabelInfo(int labelTag,const String& labelName, const String&  labelDesc);
 };
 
 #endif

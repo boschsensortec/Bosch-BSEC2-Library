@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	led_controller.h
- * @date	22 June 2022
- * @version	1.5.5
+ * @date	17 January 2023
+ * @version	2.0.6
  * 
  * @brief	Header file for the led_controller
  * 
@@ -60,6 +60,7 @@ class ledController
 private:
 	bool _ledOn = false;
 	uint32_t _timeStamp = 0;
+	demoRetCode previousRetCode;
 	
 	/*!
 	 * @brief : This function updates the led blinking pattern according to
