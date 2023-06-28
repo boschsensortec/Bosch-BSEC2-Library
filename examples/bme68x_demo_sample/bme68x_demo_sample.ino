@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	bme68x_demo_sample.ino
- * @date	17 January 2023
- * @version	2.0.6
+ * @date	11 April 2023
+ * @version	2.0.9
  * 
  * 
  */
@@ -59,9 +59,6 @@
 #include "utils.h"
 
 /* Macros used */
-/* Number of sensors to operate*/
-#define NUM_OF_SENS    4
-
 /*! FILE_DATA_READ_SIZE determines the size of the data to be read from the file */
 #define FILE_DATA_READ_SIZE	400
 
@@ -351,6 +348,8 @@ void loop()
 			   get the outputs in app and logs the data */
 			case DEMO_TEST_ALGORITHM_MODE:
 			{
+				/* Flushes the buffered sensor data to the current log file */
+				retCode = bsecDlog.flushSensorData(selectedSensor);
 				if (selectedSensor == NUM_OF_SENS)
 				{
 					for (sensor_num = 0; sensor_num < NUM_OF_SENS; sensor_num++)
@@ -605,6 +604,16 @@ void bleNotifyStartStreaming(const bleController::bleMsg &msg, JsonDocument& jso
 
 	if (retCode >= EDK_OK)
 	{
+		//Flushing the contents of the buffer to the rawdata file generated during the previous run
+		if(currentAppMode == DEMO_TEST_ALGORITHM_MODE)
+		{
+			bsecDlog.flushSensorData(selectedSensor);
+		}
+		else if(currentAppMode == DEMO_RECORDING_MODE)
+		{
+			bme68xDlog.flush();
+		}
+		
 		if (appMode == DEMO_TEST_ALGORITHM_MODE)
 		{
 			isBsecConfAvailable = utils::getFileWithExtension(bsecConfFileName, BSEC_CONFIG_FILE_EXT);
@@ -775,6 +784,16 @@ void bleNotifyStartStreaming(const bleController::bleMsg &msg, JsonDocument& jso
 void bleNotifyStopStreaming(const bleController::bleMsg &msg, JsonDocument& jsonDoc)
 {
 	jsonDoc[msg.name] = bleController::CMD_VALID;
+	
+	//Flushing the contents of the buffer to the rawdata file generated during the previous run
+	if(currentAppMode == DEMO_TEST_ALGORITHM_MODE)
+	{
+		bsecDlog.flushSensorData(selectedSensor);
+	}
+	else
+	{
+		bme68xDlog.flush();
+	}
 	selectedSensor = 0;
 	
 	currentAppMode = DEMO_IDLE_MODE;

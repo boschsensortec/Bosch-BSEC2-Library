@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	    bsec_datalogger.cpp
- * @date		17 January 2023
- * @version		2.0.6
+ * @date		11 April 2023
+ * @version		2.0.9
  * 
  * @brief    	bsec_datalogger
  *
@@ -532,7 +532,7 @@ demoRetCode bsecDataLogger::prepareConfigContent(uint8_t sensorNum)
 
 	JsonObject sensorConfiguration_0 = sensorConfigurations.createNestedObject();
 	sensorConfiguration_0["sensorIndex"] = 0;
-	if (sensorConfiguration_0["sensorIndex"] == sensorNum)
+	if ( (sensorConfiguration_0["sensorIndex"] == sensorNum) || (sensorNum == NUM_OF_SENS) )
 	{
 		sensorConfiguration_0["active"] = true;
 		sensorConfiguration_0["heaterProfile"] = heaterProfileId;
@@ -547,7 +547,7 @@ demoRetCode bsecDataLogger::prepareConfigContent(uint8_t sensorNum)
 
 	JsonObject sensorConfiguration_1 = sensorConfigurations.createNestedObject();
 	sensorConfiguration_1["sensorIndex"] = 1;
-	if (sensorConfiguration_1["sensorIndex"] == sensorNum)
+	if ( (sensorConfiguration_1["sensorIndex"] == sensorNum) || (sensorNum == NUM_OF_SENS) )
 	{
 		sensorConfiguration_1["active"] = true;
 		sensorConfiguration_1["heaterProfile"] = heaterProfileId;
@@ -562,7 +562,7 @@ demoRetCode bsecDataLogger::prepareConfigContent(uint8_t sensorNum)
 
 	JsonObject sensorConfiguration_2 = sensorConfigurations.createNestedObject();
 	sensorConfiguration_2["sensorIndex"] = 2;
-	if (sensorConfiguration_2["sensorIndex"] == sensorNum)
+	if ( (sensorConfiguration_2["sensorIndex"] == sensorNum) || (sensorNum == NUM_OF_SENS) )
 	{
 		sensorConfiguration_2["active"] = true;
 		sensorConfiguration_2["heaterProfile"] = heaterProfileId;
@@ -577,7 +577,7 @@ demoRetCode bsecDataLogger::prepareConfigContent(uint8_t sensorNum)
 
 	JsonObject sensorConfiguration_3 = sensorConfigurations.createNestedObject();
 	sensorConfiguration_3["sensorIndex"] = 3;
-	if (sensorConfiguration_3["sensorIndex"] == sensorNum)
+	if ( (sensorConfiguration_3["sensorIndex"] == sensorNum) || (sensorNum == NUM_OF_SENS) )
 	{
 		sensorConfiguration_3["active"] = true;
 		sensorConfiguration_3["heaterProfile"] = heaterProfileId;
@@ -590,9 +590,10 @@ demoRetCode bsecDataLogger::prepareConfigContent(uint8_t sensorNum)
 		sensorConfiguration_3["dutyCycleProfile"] = (char*)0;
 	}
 	
+	/* Sensor number 4 in start command is used to test sensors 0 - 3 in multi instance mode*/
 	JsonObject sensorConfiguration_4 = sensorConfigurations.createNestedObject();
 	sensorConfiguration_4["sensorIndex"] = 4;
-	if (sensorConfiguration_4["sensorIndex"] == sensorNum)
+	if ( (sensorConfiguration_4["sensorIndex"] == sensorNum) && (sensorNum != NUM_OF_SENS) )
 	{
 		sensorConfiguration_4["active"] = true;
 		sensorConfiguration_4["heaterProfile"] = heaterProfileId;
@@ -742,6 +743,50 @@ demoRetCode bsecDataLogger::createLabelInfoFile()
 }
 
 /*!
+ * @brief Function which flushes the buffered sensor data to the current log file
+ */
+demoRetCode bsecDataLogger::flushSensorData(uint8_t sensorNum)
+{
+	demoRetCode retCode = EDK_OK;
+	File logFile;
+	std::string txt;
+	
+    if (_bs.rdbuf()->in_avail())
+	{
+		txt = _bs.str();
+		_bs.str(std::string());
+		
+		if (_bmefileCounter && logFile.open(_bmeFileName.c_str(), O_RDWR | O_AT_END))
+		{
+			logFile.seek(_bmeDataPos);
+			logFile.print(txt.c_str());
+			_bmeDataPos = logFile.position();
+			logFile.print("\n\t\t]\n\t}\n}");
+			
+			if (logFile.size() >= FILE_SIZE_LIMIT)
+			{
+				logFile.close();
+				++_bmefileCounter;
+				retCode = createRawDataFile(sensorNum);
+				if (retCode >= EDK_OK)
+				{
+					retCode = createLabelInfoFile();
+				}
+			}
+			else
+			{
+				logFile.close();
+			}
+		}
+		else
+		{
+			retCode = EDK_DATALOGGER_LOG_FILE_ERROR;
+		}
+	}
+	return retCode;
+}
+
+/*!
  * @brief This function writes the bsec output to the current log file
  */
 demoRetCode bsecDataLogger::writeBsecOutput(SensorIoData& buffData)
@@ -845,48 +890,38 @@ demoRetCode bsecDataLogger::writeSensorData(const uint8_t* num, const uint32_t* 
 		}
 	}
 
-	File logFile;
-	logFile.open(_bmeFileName.c_str(), FILE_WRITE);
-	logFile.seek(_bmeDataPos);
-
 	if (_endOfLine)
 	{
-		logFile.print(",\n");
+		_bs << ",\n";
 	}
-	logFile.print("\t\t\t[\n\t\t\t\t");
-	(num != nullptr) ? logFile.print((int)*num) : logFile.print("null");
-	logFile.print(",\n\t\t\t\t");
-	(sensorId != nullptr) ? logFile.print((int)*sensorId) : logFile.print("null");
-	logFile.print(",\n\t\t\t\t");
-	logFile.print(timeSincePowerOn);
-	logFile.print(",\n\t\t\t\t");
-	logFile.print(rtcTsp);
-	logFile.print(",\n\t\t\t\t");
-	(bme68xData != nullptr) ? logFile.print(bme68xData->temperature) : logFile.print("null");
-	logFile.print(",\n\t\t\t\t");
-	(bme68xData != nullptr) ? logFile.print(bme68xData->pressure * .01f) : logFile.print("null");
-	logFile.print(",\n\t\t\t\t");
-	(bme68xData != nullptr) ? logFile.print(bme68xData->humidity) : logFile.print("null");
-	logFile.print(",\n\t\t\t\t");
-	(bme68xData != nullptr) ? logFile.print(bme68xData->gas_resistance) : logFile.print("null");
-	logFile.print(",\n\t\t\t\t");
-	(bme68xData != nullptr) ? logFile.print((int)bme68xData->gas_index) : logFile.print("null");
-	logFile.print(",\n\t\t\t\t");
-	logFile.print((bool)(BME68X_PARALLEL_MODE));
-	logFile.print(",\n\t\t\t\t");
-	(scanCycleIndex != nullptr) ? logFile.print((int)(*scanCycleIndex)) : logFile.print("null");
-	logFile.print(",\n\t\t\t\t");
-	logFile.print(groundTruth);
-	logFile.print(",\n\t\t\t\t");
-	logFile.print((int)code);
-	logFile.print("\n\t\t\t]");
+	_bs << "\t\t\t[\n\t\t\t\t";
+	(num != nullptr) ? (_bs << (int)*num) : (_bs << "null");
+	_bs << ",\n\t\t\t\t";
+	(sensorId != nullptr) ? (_bs << (int)*sensorId) : (_bs << "null");
+	_bs << ",\n\t\t\t\t";
+	_bs << timeSincePowerOn;
+	_bs << ",\n\t\t\t\t";
+	_bs << rtcTsp;
+	_bs << ",\n\t\t\t\t";
+	(bme68xData != nullptr) ? (_bs << bme68xData->temperature) : (_bs << "null");
+	_bs << ",\n\t\t\t\t";
+	(bme68xData != nullptr) ? (_bs << bme68xData->pressure * .01f) : (_bs << "null");
+	_bs << ",\n\t\t\t\t";
+	(bme68xData != nullptr) ? (_bs << bme68xData->humidity) : (_bs << "null");
+	_bs << ",\n\t\t\t\t";
+	(bme68xData != nullptr) ? (_bs << bme68xData->gas_resistance) : (_bs << "null");
+	_bs << ",\n\t\t\t\t";
+	(bme68xData != nullptr) ? (_bs << (int)bme68xData->gas_index) : (_bs << "null");
+	_bs << ",\n\t\t\t\t";
+	_bs << (bool)(BME68X_PARALLEL_MODE);
+	_bs << ",\n\t\t\t\t";
+	(scanCycleIndex != nullptr) ? (_bs << (int)(*scanCycleIndex)) : (_bs << "null");
+	_bs << ",\n\t\t\t\t";
+	_bs << groundTruth;
+	_bs << ",\n\t\t\t\t";
+	_bs << (int)code;
+	_bs << "\n\t\t\t]";
 
-	_bmeDataPos = logFile.position();
-	
-	logFile.print("\n\t\t]\n\t}\n}");
-	
-	/* close log file */
-	logFile.close();
 	_endOfLine = true;
    
     return retCode;

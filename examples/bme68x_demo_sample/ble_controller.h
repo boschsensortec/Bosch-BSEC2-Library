@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	ble_controller.h
- * @date	    17 January 2023
- * @version		2.0.6
+ * @date	    11 April 2023
+ * @version		2.0.9
  * 
  * @brief	Header file for the ble controller
  * 

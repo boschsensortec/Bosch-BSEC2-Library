@@ -2,7 +2,7 @@
 
 ## About BSEC
 
-Bosch Sensortec Environmental Cluster (BSEC) Software v2.2.0.0 released on May 9th, 2022
+Bosch Sensortec Environmental Cluster (BSEC) Software v2.4.0.0 released on January 23rd, 2023
 
 The BSEC fusion library has been conceptualized to provide a higher-level signal processing and fusion for the BME688. The library receives compensated sensor values from the sensor API. It processes the BME688 signals to provide the requested sensor outputs.
 
@@ -32,8 +32,7 @@ Available binaries for download:
 
 | Platform | Compiler | TYPE |
 |----------|----------|------|
-| Cortex-ARM | GCC | Cortex-M0, M0+, M3, M4, M4_FPU, M7 |
-| AVR_8bit | AVR-GCC | MegaAVR, XMEGA |
+| Cortex-ARM | GCC | Cortex-M0+, M3, M4, M4_FPU, M33_FPU |
 | ESP8266 | xtensa-lx106-elf-gcc | ESP8266 |
 | ESP32 | xtensa-esp32-elf-gcc | ESP32 |
 | ESP32 | xtensa-esp32s2-elf-gcc | ESP32-S2 |
@@ -56,7 +55,7 @@ Advantages
 
 The BSEC software is only available for download or use after accepting the software license agreement. By using this library, you have agreed to the terms of the license agreement.
 
-[BSEC license agreement](https://www.bosch-sensortec.com/media/boschsensortec/downloads/software/bme688_development_software/bosch-sensortec-clickthrough-license-bme688.pdf)
+[BSEC license agreement](https://www.bosch-sensortec.com/media/boschsensortec/downloads/software/bme688_development_software/2023_04/license_terms_bme688_bme680_bsec.pdf)
 
 ## Installation and getting started
 
@@ -94,7 +93,7 @@ Select your board and COM port. Upload the example. Open the Serial monitor. You
 
 - basic_config_state.ino: This is an example for illustrating the BSEC feature using desired configuration setting.
 
-- bme68x_demo_sample.ino: This demonstrator application running on an x8 board has the feature of sensor data logging and BSEC algorithm illustrated. Please refer [BME688 Development Kit-Firmware-Quick-Start-Guide](examples/bme68x_demo_sample/Quick_Start_Guide.md) for installing dependent libraries and how to flash.
+- bme68x_demo_sample.ino: This demonstrator application running on an x8 board has the feature of sensor data logging and BSEC algorithm illustrated. Please refer [BME688 Development Kit-Firmware-Quick-Start-Guide](examples/bme68x_demo_sample/Quick_Start_Guide.md) for installing dependent libraries and how to flash.
 	
 	**Note:** Please ensure to use the bsec_interface_multi.h header file specifically, for demonstrating the multi instance feature
 

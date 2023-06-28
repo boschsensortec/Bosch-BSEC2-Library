@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	bme68x_datalogger.cpp
- * @date	17 January 2023
- * @version	2.0.6
+ * @date	11 April 2023
+ * @version	2.0.9
  * 
  * @brief    	bme68x_datalogger
  *
