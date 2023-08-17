@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	bsec_datalogger.h
- * @date	17 January 2023
- * @version	2.0.6
+ * @date	11 April 2023
+ * @version	2.0.9
  * 
  * @brief	Header file for the bsec datalogger
  * 
@@ -51,7 +51,11 @@
 #include "utils.h"
 #include "demo_app.h"
 #include "label_provider.h"
+#include <sstream>
+#include <iostream>
 
+/* Number of sensors to operate*/
+#define NUM_OF_SENS    4
 #define COUNT_MAX_SIZE 2
 
 /*!
@@ -61,7 +65,9 @@ class bsecDataLogger
 {
 private:
 	String _aiConfigName, _aiFileName, _bmeFileName, _labelFileName;
+	std::stringstream _bs, _ba;
 	unsigned long _aiDataPos = 0, _bmeDataPos = 0;
+	int _bmefileCounter = 1;
     int _bsecFileCounter = 1;
 	bool _firstLine = false;
 	bsec_version_t _version;
@@ -140,6 +146,13 @@ public:
      * @return  bosch error code
 	 */
     demoRetCode begin(const String& configName, const bsec_version_t& bsecVersion, uint8_t sensorNum);
+	
+	/*!
+	 * @brief : This function flushes the buffered sensor data to the current log file
+	 * 
+     * @return  bosch error code
+	 */
+	demoRetCode flushSensorData(uint8_t sensorNum);
 
 	/*!
 	 * @brief : This function writes the bsec output to the current log file.
