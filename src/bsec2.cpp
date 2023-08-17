@@ -287,12 +287,15 @@ bool Bsec2::processData(int64_t currTimeNs, const bme68xData &data)
     bsec_input_t inputs[BSEC_MAX_PHYSICAL_SENSOR]; /* Temp, Pres, Hum & Gas */
     uint8_t nInputs = 0;
     /* Checks all the required sensor inputs, required for the BSEC library for the requested outputs */
-    if (BSEC_CHECK_INPUT(bmeConf.process_data, BSEC_INPUT_TEMPERATURE))
+    if (BSEC_CHECK_INPUT(bmeConf.process_data, BSEC_INPUT_HEATSOURCE))
     {
         inputs[nInputs].sensor_id = BSEC_INPUT_HEATSOURCE;
         inputs[nInputs].signal = extTempOffset;
         inputs[nInputs].time_stamp = currTimeNs;
         nInputs++;
+    }
+    if (BSEC_CHECK_INPUT(bmeConf.process_data, BSEC_INPUT_TEMPERATURE))
+    {
 #ifdef BME68X_USE_FPU
         inputs[nInputs].signal = data.temperature;
 #else
