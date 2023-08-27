@@ -67,9 +67,80 @@ void labelProvider::begin()
     pinMode(PIN_BUTTON_1, INPUT_PULLUP);
     pinMode(PIN_BUTTON_2, INPUT_PULLUP);
 	
+#ifdef USE_RING
+    attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_1), isrButton1_ring, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_2), isrButton2_ring, CHANGE);
+#else
     attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_1), isrButton1, CHANGE);
     attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_2), isrButton2, CHANGE);
+#endif
 }
+/*!
+ * @brief this function is the secondary interrupt function, to handle the bon press of the first Button as a ringbuffer style
+ */
+
+void labelProvider::isrButton1_ring()
+{
+    /*check if button is pressed or idle */
+    if (_but1Pressed == false)
+    {
+        /*determine if only this button or both are pressed*/
+        _but1Pressed = true;
+        if(_but2Pressed)
+        {
+            /* Reset to null label */
+            _label = BSEC_NO_CLASS;
+        }
+        else
+        {
+            _label = static_cast<gasLabel>((static_cast<int>(_label) + 1) % BSEC_NUM_CLASSES);
+        }
+
+    }
+    else
+    {
+        /* if both buttons are released, user label according to helper button label */
+        _but1Pressed = false;
+        if (!_but2Pressed)
+        {
+      xQueueSendFromISR(_queue, (const void*)&_label, 0);
+        }
+    }
+}
+
+/*!
+ * @brief this function is the secondary interrupt function, to handle the bon press of the second Button as a ringbuffer style
+ */
+
+void labelProvider::isrButton2_ring()
+{
+    /*check if button is pressed or idle */
+    if (_but2Pressed == false)
+    {
+        /*determine if only this button or both are pressed*/
+        _but2Pressed = true;
+        if(_but1Pressed)
+        {
+            /* Reset to null label */
+            _label = BSEC_NO_CLASS;
+        }
+        else
+        {
+            _label = static_cast<gasLabel>((static_cast<int>(_label) + 1) % BSEC_NUM_CLASSES);
+        }
+
+    }
+    else
+    {
+        /* if both buttons are released, user label according to helper button label */
+        _but2Pressed = false;
+        if (!_but1Pressed)
+        {
+      xQueueSendFromISR(_queue, (const void*)&_label, 0);
+        }
+    }
+}
+
 
 /*!
  * @brief This function is the interrupt function, that handles the button press of the first button
