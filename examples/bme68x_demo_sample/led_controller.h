@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	led_controller.h
- * @date	11 April 2023
- * @version	2.0.9
+ * @date	04 Dec 2023
+ * @version	2.1.4
  * 
  * @brief	Header file for the led_controller
  * 
@@ -48,9 +48,9 @@
 
 #include "demo_app.h"
 
-#define PIN_LED 			13
-#define LED_ERROR_PERIOD	100
-#define LED_OK_PERIOD		1000
+#define PIN_LED				UINT8_C(13)
+#define LED_ERROR_PERIOD	UINT8_C(100)
+#define LED_OK_PERIOD		UINT16_C(1000)
 
 /*!
  * @brief : Class library that holds functionality of the led controller
@@ -58,9 +58,9 @@
 class ledController
 {
 private:
-	bool _ledOn = false;
-	uint32_t _timeStamp = 0;
-	demoRetCode previousRetCode;
+	bool _led_on = false;
+	uint32_t _time_stamp = 0;
+	demo_ret_code previous_ret_code;
 	
 	/*!
 	 * @brief : This function updates the led blinking pattern according to
@@ -68,14 +68,14 @@ private:
 	 * 
 	 * @param[in] period : blinking period
 	 */
-	void switchLed(uint32_t period);
+	void switch_led(uint32_t period);
 
 public:
-    /*!
-     * @brief : The constructor of the led_controller class
-     *        	Creates an instance of the class
-     */
-    ledController();
+	/*!
+	 * @brief : The constructor of the led_controller class
+	 *        	Creates an instance of the class
+	 */
+	ledController();
 	
 	/*!
      * @brief : This function initializes the led controller module
@@ -89,7 +89,7 @@ public:
 	 *
 	 * @param[in] retCode : error code
 	 */
-    void update(demoRetCode retCode);
+	void update(demo_ret_code ret_code);
 };
 
 #endif

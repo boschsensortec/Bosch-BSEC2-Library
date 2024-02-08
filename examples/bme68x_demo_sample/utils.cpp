@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	    utils.cpp
- * @date		11 April 2023
- * @version		2.0.9
+ * @date		04 Dec 2023
+ * @version		2.1.4
  * 
  * @brief    	utils
  *
@@ -46,33 +46,34 @@
 #include <ArduinoJson.h>
 #include <math.h>
 
-uint64_t 	utils::_tickMs;
-uint64_t 	utils::_tickOverFlowCnt;
+uint64_t 	utils::_tick_ms;
+uint64_t 	utils::_tick_over_flow_cnt;
 SdFat		utils::_sd;
 RTC_PCF8523 utils::_rtc;
-char 		utils::_fileSeed[DATA_LOG_FILE_SEED_SIZE];
-unsigned long 	utils::_fileDataPos = 0;
-bool		utils::_isConfAvailable;
+char 		utils::_file_seed[DATA_LOG_FILE_SEED_SIZE];
+uint32_t 	utils::_file_data_pos = 0;
+bool		utils::_is_conf_available;
 
 /*!
  * @brief This function creates the random alphanumeric file seed for the log file
  */
-void utils::createFileSeed()
+void utils::create_file_seed()
 {
 	/* setup an alphanumeric characters buffer to choose from */
 	const char *letters = "abcdefghijklmnopqrstuvwxyz0123456789";
+
 	/* for each character of the file seed, randomly select one from the buffer */
-	for (int seedChar = 0; seedChar < 16; seedChar++)
+	for (uint32_t seed_char = 0; seed_char < 16; seed_char++)
 	{
-		int randC = random(0, 36);
-		_fileSeed[seedChar] = letters[randC];
+		uint32_t rand_c = random(0, 36);
+		_file_seed[seed_char] = letters[rand_c];
 	}
 }
 
 /*!
  * @brief This function is a callback function to set the correct date for modified SD-card files
  */
-void utils::dateTime(uint16_t* date, uint16_t* time)
+void utils::date_time(uint16_t* date, uint16_t* time)
 {
 	DateTime now = _rtc.now();
 	/* return date using FAT_DATE macro to format fields */
@@ -84,38 +85,38 @@ void utils::dateTime(uint16_t* date, uint16_t* time)
 /*!
  * @brief This function initializes the module
  */	
-demoRetCode utils::begin()
+demo_ret_code utils::begin()
 {
-	demoRetCode retCode = EDK_OK;
+	demo_ret_code ret_code = EDK_OK;
 	
 	if (!_sd.begin(PIN_SD_CS, SPI_EIGHTH_SPEED))
 	{
-		retCode = EDK_SD_CARD_INIT_ERROR;
+		ret_code = EDK_SD_CARD_INIT_ERROR;
 	}
 	else if (!_rtc.begin())
 	{
-		retCode = EDK_DATALOGGER_RTC_BEGIN_WARNING;
+		ret_code = EDK_DATALOGGER_RTC_BEGIN_WARNING;
 	}
 	else if (!_rtc.initialized() || _rtc.lostPower())
 	{
 		_rtc.adjust(DateTime(F(__DATE__), F(__TIME__)) - TimeSpan((int32_t)(TIMEZONE * 3600)));
 		
-		retCode = EDK_DATALOGGER_RTC_ADJUST_WARNING;
+		ret_code = EDK_DATALOGGER_RTC_ADJUST_WARNING;
 	}
 
 	randomSeed(analogRead(0));
 	
-	createFileSeed();
+	create_file_seed();
 	
-	SdFile::dateTimeCallback(dateTime);
+	SdFile::dateTimeCallback(date_time);
 
-	return retCode;
+	return ret_code;
 }
 
 /*!
  * @brief This function retrieves the rtc handle
  */	
-RTC_PCF8523& utils::getRtc()
+RTC_PCF8523& utils::get_rtc()
 {
 	return _rtc;
 }
@@ -123,58 +124,61 @@ RTC_PCF8523& utils::getRtc()
 /*!
  * @brief This function retrieves the created file seed
  */	
-String utils::getFileSeed()
+String utils::get_file_seed()
 {
-	return String(_fileSeed);
+	return String(_file_seed);
 }
 
 /*!
  * @brief This function creates a mac address string
  */
-String utils::getMacAddress()
+String utils::get_mac_address()
 {
 	uint64_t mac = ESP.getEfuseMac();
-	char *macPtr = (char*)&mac;
-	char macStr[13];
+	char *mac_ptr = (char*)&mac;
+	char mac_str[13];
 	
-	sprintf(macStr, "%02X%02X%02X%02X%02X%02X", macPtr[0], macPtr[1], macPtr[2], macPtr[3], macPtr[4], macPtr[5]);
+	sprintf(mac_str, "%02X%02X%02X%02X%02X%02X", mac_ptr[0], mac_ptr[1], mac_ptr[2], mac_ptr[3], mac_ptr[4], mac_ptr[5]);
 	
-	return String(macStr);
+	return String(mac_str);
 }
 
 /*!
  * @brief This function creates a date string
  */
-String utils::getDateTime()
+String utils::get_date_time()
 {
-	char timeBuffer[20];
+	char time_buffer[20];
 	DateTime date = _rtc.now();
 	
-	sprintf(timeBuffer, "%d_%02d_%02d_%02d_%02d", date.year(), date.month(), date.day(), date.hour(), date.minute());
+	sprintf(time_buffer, "%d_%02d_%02d_%02d_%02d", date.year(), date.month(), date.day(), date.hour(), date.minute());
 	
-	return String(timeBuffer);
+	return String(time_buffer);
 }
 
 /*!
  * @brief This function retrieves the first file with provided file extension
  */
-bool utils::getFileWithExtension(String& fName, const String& extension)
+bool utils::get_file_with_extension(String& fName, const String& extension)
 {
 	File root;
 	File file;
-	char fileName[90];
+	char file_name[90];
 	
 	if (root.open("/"))
 	{
+
 		while (file.openNext(&root, O_READ))
 		{
+
 			if (file.isFile())
 			{
-				file.getName(fileName, sizeof(fileName));
-				if (String(fileName).endsWith(extension))
+				file.getName(file_name, sizeof(file_name));
+
+				if (String(file_name).endsWith(extension))
 				{
 					file.close();
-					fName = String(fileName);
+					fName = String(file_name);
 					return true;
 				}
 			}
@@ -187,29 +191,34 @@ bool utils::getFileWithExtension(String& fName, const String& extension)
 /*!
  * @brief This function retrieves the latest file with provided file extension
  */
-bool utils::getLatestFileWithExtension(String& fName, const String& extension)
+bool utils::get_latest_file_with_extension(String& fName, const String& extension)
 {
 	File root;
 	File file;
-	char fileName[90];
+	char file_name[90];
 	bool flag = false;
+
 	if (root.open("/"))
-	{		
+	{
+
 		while (file.openNext(&root, O_READ))
 		{
+
 			if (file.isFile())
 			{
-				file.getName(fileName, sizeof(fileName));
-				if (String(fileName).endsWith(extension))
+				file.getName(file_name, sizeof(file_name));
+
+				if (String(file_name).endsWith(extension))
 				{
 					file.close();
-					fName = String(fileName);
+					fName = String(file_name);
 					flag = true;
 				}
 			}
 			file.close();
 		}
 	}
+
 	if (flag)
 	{
 		return true;
@@ -223,91 +232,101 @@ bool utils::getLatestFileWithExtension(String& fName, const String& extension)
 /*!
  * @brief This function retrives the bsec configuration string from the provided file
  */
-demoRetCode utils::getBsecConfig(const String& fileName, uint8_t configStr[BSEC_MAX_PROPERTY_BLOB_SIZE])
+demo_ret_code utils::get_bsec_config(const String& file_name, uint8_t config_str[BSEC_MAX_PROPERTY_BLOB_SIZE])
 {
-	demoRetCode retCode = EDK_OK;
-	uint32_t configStrLen;
+	demo_ret_code ret_code = EDK_OK;
+	uint32_t config_str_len;
 	
 	File configFile;
-	if (!configFile.open(fileName.c_str(), O_RDWR))
+	if (!configFile.open(file_name.c_str(), O_RDWR))
 	{
-		retCode = EDK_BSEC_CONFIG_STR_FILE_ERROR;
+		ret_code = EDK_BSEC_CONFIG_STR_FILE_ERROR;
 	}
-	else if (configFile.read(&configStrLen, sizeof(uint32_t)) != sizeof(uint32_t))
+	else if (configFile.read(&config_str_len, sizeof(uint32_t)) != sizeof(uint32_t))
 	{
-		retCode = EDK_BSEC_CONFIG_STR_READ_ERROR;
+		ret_code = EDK_BSEC_CONFIG_STR_READ_ERROR;
 	}
-	else if (configStrLen != BSEC_MAX_PROPERTY_BLOB_SIZE)
+	else if (config_str_len != BSEC_MAX_PROPERTY_BLOB_SIZE)
 	{
-		retCode = EDK_BSEC_CONFIG_STR_SIZE_ERROR;
+		ret_code = EDK_BSEC_CONFIG_STR_SIZE_ERROR;
 	}
-	else if (configFile.read(configStr, configStrLen) != configStrLen)
+	else if (configFile.read(config_str, config_str_len) != config_str_len)
 	{
-		retCode = EDK_BSEC_CONFIG_STR_READ_ERROR;
+		ret_code = EDK_BSEC_CONFIG_STR_READ_ERROR;
 	}
-	return retCode;
+	return ret_code;
 }
 
 /*!
  * @brief This function returns the tick value (ms)
  */
-uint64_t utils::getTickMs(void)
+uint64_t utils::get_tick_ms(void)
 {
-	uint64_t timeMs = millis();
-	if (_tickMs > timeMs) /* An overflow occurred */
+	uint64_t time_ms = millis();
+
+	if (_tick_ms > time_ms) /* An overflow occurred */
 	{ 
-		_tickOverFlowCnt++;
+		_tick_over_flow_cnt++;
 	}
-	_tickMs = timeMs;
-	return timeMs + (_tickOverFlowCnt * INT64_C(0xFFFFFFFF));
+	_tick_ms = time_ms;
+	return time_ms + (_tick_over_flow_cnt * INT64_C(0xFFFFFFFF));
 }
 
 /*!
  * @brief : This function reads the size of bytes from the file of given fileExtension
  */
-demoRetCode utils::readFile(const String& fileExtension, size_t size, char *fileData)
+demo_ret_code utils::read_file(const String& file_extension, size_t size, char *file_data)
 {
 	File file;
-	demoRetCode retCode;
-	static String fileName;
-	static bool firstTime = true;
-	memset(fileData, 0, size); /* Clears the previous data if any */
-	retCode = utils::begin(); /* Initializes the SD card module */
+	demo_ret_code ret_code;
+	static String file_name;
+	static bool first_time = true;
+	memset(file_data, 0, size); /* Clears the previous data if any */
+	ret_code = utils::begin(); /* Initializes the SD card module */
 
-	if (retCode >= EDK_OK)
+	size = size - 1;
+	
+	if (ret_code >= EDK_OK)
 	{
-		if (firstTime)
+
+		if (first_time)
 		{
-			if (fileExtension == BME68X_LABEL_INFO_FILE_EXT)
+
+			if (file_extension == BME68X_LABEL_INFO_FILE_EXT)
 			{
-				_isConfAvailable = utils::getLatestFileWithExtension(fileName, fileExtension); /* check for a file with given extension */
+				/* check for a file with given extension */
+				_is_conf_available = utils::get_latest_file_with_extension(file_name, file_extension);
 			}
 			else
 			{
-				_isConfAvailable = utils::getFileWithExtension(fileName, fileExtension); /* check for a file with given extension */
+				/* check for a file with given extension */
+				_is_conf_available = utils::get_file_with_extension(file_name, file_extension);
 			}
 		}
-		if (_isConfAvailable)
+
+		if (_is_conf_available)
 		{
-			if (!file.open(fileName.c_str(), O_READ)) /* open the given file in read mode */
+
+			if (!file.open(file_name.c_str(), O_READ)) /* open the given file in read mode */
 			{
 				return EDK_FILE_OPEN_ERROR;
 			}
-			firstTime = false;
-			file.seek(_fileDataPos); /* sets the position of the file to a particular byte */
+			first_time = false;
+			file.seek(_file_data_pos); /* sets the position of the file to a particular byte */
+
 			if (file.available())
 			{
-				file.read(fileData, size); /* reads the given number of bytes of data */
-				_fileDataPos = file.position(); /* save the file position indicator for next read */
+				file.read(file_data, size); /* reads the given number of bytes of data */
+				_file_data_pos = file.position(); /* save the file position indicator for next read */
 				file.close(); /* closes the file */
 				return EDK_OK;
 			}
 			file.close();
-			_fileDataPos = 0; /* resets the file position indicator */
-			firstTime = true;
+			_file_data_pos = 0; /* resets the file position indicator */
+			first_time = true;
 			return EDK_END_OF_FILE;
 		}
 		return EDK_EXTENSION_NOT_AVAILABLE;
 	}
-	return retCode;
+	return ret_code;
 }

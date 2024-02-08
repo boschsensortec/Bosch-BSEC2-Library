@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	bme68x_demo_sample.ino
- * @date	11 April 2023
- * @version	2.0.9
+ * @date	04 Dec 2023
+ * @version	2.1.4
  * 
  * 
  */
@@ -60,7 +60,7 @@
 
 /* Macros used */
 /*! FILE_DATA_READ_SIZE determines the size of the data to be read from the file */
-#define FILE_DATA_READ_SIZE	400
+#define FILE_DATA_READ_SIZE	    UINT16_C(400)
 
 /*!
  * @brief : This function is called by the BSEC library when a new output is available
@@ -76,7 +76,7 @@ void bsecCallBack(const bme68x_data input, const bsecOutputs outputs);
  * @param[in] msg 			: reference to the new BLE message
  * @param[inout] jsonDoc	: reference to the json formatted BLE response
  */
-void bleMessageReceived(const bleController::bleMsg& msg, JsonDocument& jsonDoc);
+void bleMessageReceived(const bleController::ble_msg& msg, JsonDocument& jsonDoc);
 
 /*!
  * @brief : This function handles getlabelinfo BLE command reception (get label information)
@@ -84,7 +84,7 @@ void bleMessageReceived(const bleController::bleMsg& msg, JsonDocument& jsonDoc)
  * @param[in] msg			: reference to the new BLE message
  * @param[inout] jsonDoc 	: reference to the json formatted BLE response
  */
-void bleNotifyGetLabelInfo(const bleController::bleMsg& msg, JsonDocument& jsonDoc);
+void ble_notify_get_label_info(const bleController::ble_msg& msg, JsonDocument& jsonDoc);
 
 /*!
  * @brief : This function handles setlabelinfo BLE command reception (set label information)
@@ -92,7 +92,7 @@ void bleNotifyGetLabelInfo(const bleController::bleMsg& msg, JsonDocument& jsonD
  * @param[in] msg 		 : reference to the new BLE message
  * @param[inout] jsonDoc : reference to the json formatted BLE response
  */
-void bleNotifySetLabelInfo(const bleController::bleMsg& msg, JsonDocument& jsonDoc);
+void ble_notify_set_label_info(const bleController::ble_msg& msg, JsonDocument& jsonDoc);
 
 /*!
  * @brief : This function handles setlabel BLE command reception (set class label)
@@ -100,7 +100,7 @@ void bleNotifySetLabelInfo(const bleController::bleMsg& msg, JsonDocument& jsonD
  * @param[in] msg 		 : reference to the new BLE message
  * @param[inout] jsonDoc : reference to the json formatted BLE response
  */
-void bleNotifySetLabel(const bleController::bleMsg& msg, JsonDocument& jsonDoc);
+void ble_notify_set_label(const bleController::ble_msg& msg, JsonDocument& jsonDoc);
 
 /*!
  * @brief : This function handles getrtctime BLE command reception (get RTC timestamp)
@@ -108,7 +108,7 @@ void bleNotifySetLabel(const bleController::bleMsg& msg, JsonDocument& jsonDoc);
  * @param[in] msg 		 : reference to the new BLE message
  * @param[inout] jsonDoc : reference to the json formatted BLE response
  */
-void bleNotifyGetRtcTime(const bleController::bleMsg &msg, JsonDocument& jsonDoc);
+void ble_notify_get_rtc_time(const bleController::ble_msg &msg, JsonDocument& jsonDoc);
 
 /*!
  * @brief : This function handles setrtctime BLE command reception (set RTC timestamp)
@@ -116,7 +116,7 @@ void bleNotifyGetRtcTime(const bleController::bleMsg &msg, JsonDocument& jsonDoc
  * @param[in] msg 		 : reference to the new BLE message
  * @param[inout] jsonDoc : reference to the json formatted BLE response
  */
-void bleNotifySetRtcTime(const bleController::bleMsg &msg, JsonDocument& jsonDoc);
+void ble_notify_set_rtc_time(const bleController::ble_msg &msg, JsonDocument& jsonDoc);
 
 /*!
  * @brief : This function handles start BLE command reception (start BLE streaming of BSEC and BME raw data)
@@ -124,7 +124,7 @@ void bleNotifySetRtcTime(const bleController::bleMsg &msg, JsonDocument& jsonDoc
  * @param[in] msg		 : reference to the new BLE message
  * @param[inout] jsonDoc : reference to the json formatted BLE response
  */
-void bleNotifyStartStreaming(const bleController::bleMsg &msg, JsonDocument& jsonDoc);
+void ble_notify_start_streaming(const bleController::ble_msg &msg, JsonDocument& jsonDoc);
 
 /*!
  * @brief : This function handles stop BLE command reception (stop BLE streaming of BSEC and BME raw data)
@@ -132,7 +132,7 @@ void bleNotifyStartStreaming(const bleController::bleMsg &msg, JsonDocument& jso
  * @param[in] msg		 : reference to the new BLE message
  * @param[inout] jsonDoc : reference to the json formatted BLE response
  */
-void bleNotifyStopStreaming(const bleController::bleMsg &msg, JsonDocument& jsonDoc);
+void ble_notify_stop_streaming(const bleController::ble_msg &msg, JsonDocument& jsonDoc);
 
 /*!
  * @brief : This function handles readconfig BLE command reception (start BLE Streaming of config file data)
@@ -140,14 +140,14 @@ void bleNotifyStopStreaming(const bleController::bleMsg &msg, JsonDocument& json
  * @param[in] msg		 : reference to the new BLE message
  * @param[inout] jsonDoc : reference to the json formatted BLE response
  */
-void bleNotifyReadConfig(const bleController::bleMsg &msg, JsonDocument& jsonDoc);
+void ble_notify_read_config(const bleController::ble_msg &msg, JsonDocument& jsonDoc);
 
 /*!
  * @brief : This function handles BSEC output notification
  *
  * @param[in] outputs : reference to the new BSEC output data
  */
-void bleNotifyBsecOutput(const bsecOutputs& outputs, const uint8_t sensNum);
+void ble_notify_bsec_output(const bsecOutputs& outputs, const uint8_t sens_num);
 
 /*!
  * @brief : This function handles BME68X data notification
@@ -155,7 +155,7 @@ void bleNotifyBsecOutput(const bsecOutputs& outputs, const uint8_t sensNum);
  * @param[in] input : reference to the new BME68X data
  * @param[in] sensNum: sensor number
  */
-void bleNotifyBme68xData(const bme68x_data& input, const uint8_t sensNum);
+void ble_notify_bme68x_data(const bme68x_data& input, const uint8_t sens_num);
 
 /*!
  * @brief : This function handles setappmode BLE command reception (Setting the current App mode)
@@ -163,7 +163,7 @@ void bleNotifyBme68xData(const bme68x_data& input, const uint8_t sensNum);
  * @param[in] msg		 : reference to the new BLE message
  * @param[inout] jsonDoc : reference to the json formatted BLE response
  */
-void bleNotifySetAppmode(const bleController::bleMsg &msg, JsonDocument& jsonDoc);
+void ble_notify_set_appmode(const bleController::ble_msg &msg, JsonDocument& jsonDoc);
 
 /*!
  * @brief : This function handles getappmode BLE command reception (Returns the current App mode)
@@ -171,7 +171,7 @@ void bleNotifySetAppmode(const bleController::bleMsg &msg, JsonDocument& jsonDoc
  * @param[in] msg		 : reference to the new BLE message
  * @param[inout] jsonDoc : reference to the json formatted BLE response
  */
-void bleNotifyGetAppmode(const bleController::bleMsg &msg, JsonDocument& jsonDoc);
+void ble_notify_get_appmode(const bleController::ble_msg &msg, JsonDocument& jsonDoc);
 
 /*!
  * @brief : This function handles setgroundtruth BLE command reception(Setting the Groundtruth)
@@ -179,7 +179,7 @@ void bleNotifyGetAppmode(const bleController::bleMsg &msg, JsonDocument& jsonDoc
  * @param[in] msg		 : reference to the new BLE message
  * @param[inout] jsonDoc : reference to the json formatted BLE response
  */
-void bleNotifySetGroundtruth(const bleController::bleMsg &msg, JsonDocument& jsonDoc);
+void ble_notify_set_groundtruth(const bleController::ble_msg &msg, JsonDocument& jsonDoc);
 
 /*!
  * @brief : This function handles getfwversion BLE command reception (Returns the current firmware version)
@@ -187,7 +187,7 @@ void bleNotifySetGroundtruth(const bleController::bleMsg &msg, JsonDocument& jso
  * @param[in] msg		 : reference to the new BLE message
  * @param[inout] jsonDoc : reference to the json formatted BLE response
  */
-void bleNotifyGetFwVersion(const bleController::bleMsg &msg, JsonDocument& jsonDoc);
+void ble_notify_get_fw_version(const bleController::ble_msg &msg, JsonDocument& jsonDoc);
 
 /*!
  * @brief : This function handles sensor manager and BME68X datalogger configuration
@@ -196,7 +196,7 @@ void bleNotifyGetFwVersion(const bleController::bleMsg &msg, JsonDocument& jsonD
  *
  * @return  Application return code
  */
-demoRetCode configureSensorLogging(const String& bmeExtension);
+demo_ret_code configure_sensor_logging(const String& bme_extension);
 
 /*!
  * @brief : This function handles the read configuration File
@@ -205,7 +205,7 @@ demoRetCode configureSensorLogging(const String& bmeExtension);
  *
  * @return  Application return code
  */
-demoRetCode configFileRead(const String& configFile);
+demo_ret_code config_file_read(const String& config_file);
 
 /*!
  * @brief : This function handles BSEC datalogger configuration
@@ -220,7 +220,8 @@ demoRetCode configFileRead(const String& configFile);
  *
  * @return  Application return code
  */
-demoRetCode configureBsecLogging(const String& aiConfigFile, const String& bsecConfigFile, uint8_t bsecConfigStr[BSEC_MAX_PROPERTY_BLOB_SIZE], uint8_t sensorNum);
+demo_ret_code configure_bsec_logging(const String& ai_config_file, const String& bsec_config_file,
+                                 uint8_t bsec_config_str[BSEC_MAX_PROPERTY_BLOB_SIZE], uint8_t sensor_num);
 
 /*!
  * @brief : This function handles collecting, sending sensor raw data via ble and data logging
@@ -229,10 +230,17 @@ demoRetCode configureBsecLogging(const String& aiConfigFile, const String& bsecC
  *
  * @return  a Bosch return code
  */
-demoRetCode logSensorData(uint8_t sensNum);
+demo_ret_code log_sensor_data(uint8_t sens_num);
 
-uint8_t 				bsecConfig[BSEC_MAX_PROPERTY_BLOB_SIZE];
-char 					configFileData[FILE_DATA_READ_SIZE];
+/*!
+ * @brief : This function receive the system time (in unix epoch time format) from serial port and update into RTC time
+ *
+ * @return  void
+ */
+void read_sys_time();
+
+uint8_t 				bsec_config[BSEC_MAX_PROPERTY_BLOB_SIZE];
+char 					config_file_data[FILE_DATA_READ_SIZE];
 Bsec2 					bsec2[NUM_OF_SENS];
 bleController  			bleCtlr(bleMessageReceived);
 labelProvider 			labelPvr;
@@ -240,82 +248,90 @@ ledController			ledCtlr;
 sensorManager 			sensorMgr;
 bme68xDataLogger		bme68xDlog;
 bsecDataLogger 			bsecDlog;
-demoRetCode				retCode;
-uint8_t					selectedSensor;
-String 					bme68xConfFileName, bsecConfFileName, aiConfFileName, configFileName, labelFileName;
-demoAppMode				appMode, currentAppMode;
-gasLabel 				label;
-bool 					isBme68xConfAvailable, isBsecConfAvailable, isAIConfAvailable, isLabelInfoAvailable;
-commMux					comm[NUM_OF_SENS];
-uint8_t					bsecMemBlock[NUM_OF_SENS][BSEC_INSTANCE_SIZE];
+demo_ret_code			ret_code;
+uint8_t					selected_sensor;
+String 					bme68x_conf_file_name, bsec_conf_file_name, ai_conf_file_name, config_file_name, label_file_name;
+demo_app_mode			app_mode, current_app_mode;
+gas_label 				label;
+bool 					is_bme68x_conf_available, is_bsec_conf_available, is_ai_conf_available, is_label_info_available;
+comm_mux				comm[NUM_OF_SENS];
+uint8_t					bsec_mem_block[NUM_OF_SENS][BSEC_INSTANCE_SIZE];
 uint8_t 				sensor = 0;
 uint8_t 				sensor_num;
-uint32_t				groundTruth;
-static uint8_t 			buffCount = 0;
-static bsecDataLogger::SensorIoData buff[NUM_OF_SENS];
+uint32_t				ground_truth;
+static uint8_t 			buff_count = 0;
+static bsecDataLogger::sensor_io_data buff[NUM_OF_SENS];
+
+uint32_t received_sys_time = 0;
 
 void setup()
 {
 	Serial.begin(115200);
 	/* Setting default mode as idle */
-	appMode = DEMO_RECORDING_MODE;
-	currentAppMode = DEMO_RECORDING_MODE;
+	app_mode = DEMO_RECORDING_MODE;
+	current_app_mode = DEMO_RECORDING_MODE;
 
 	label = BSEC_NO_CLASS;
 
 	/* Setting default sensor as sensor 0 to collect data */
-	selectedSensor = NUM_BME68X_UNITS;
+	selected_sensor = NUM_BME68X_UNITS;
 	
 	/* Initializes the label provider module */
 	labelPvr.begin();
 
 	/* Initializes the led controller module */
-    ledCtlr.begin();
+	ledCtlr.begin();
 
 	/* initialize the ble controller */
 	bleCtlr.begin();
   
   	/* Initializes the SD and RTC module */
-	retCode = utils::begin();
-	if (retCode >= EDK_OK)
+	ret_code = utils::begin();
+
+	if (ret_code >= EDK_OK)
 	{
-		isBme68xConfAvailable = utils::getFileWithExtension(bme68xConfFileName, BME68X_CONFIG_FILE_EXT);
+		is_bme68x_conf_available = utils::get_file_with_extension(bme68x_conf_file_name, BME68X_CONFIG_FILE_EXT);
+
 		/* checks the availability of BME board configuration file */
-		if (isBme68xConfAvailable)
+		if (is_bme68x_conf_available)
 		{
-			if (configureSensorLogging(bme68xConfFileName) < EDK_OK)
+
+			if (configure_sensor_logging(bme68x_conf_file_name) < EDK_OK)
 			{
-				retCode = EDK_SENSOR_INITIALIZATION_FAILED;
+				ret_code = EDK_SENSOR_INITIALIZATION_FAILED;
 			}
 		}
 		else
 		{
-			retCode = EDK_SENSOR_CONFIG_MISSING_ERROR;
+			ret_code = EDK_SENSOR_CONFIG_MISSING_ERROR;
 		}
 	}
 	
-	if (retCode < EDK_OK)
+	if (ret_code < EDK_OK)
 	{
-		currentAppMode = DEMO_IDLE_MODE;
-		appMode = DEMO_IDLE_MODE;
+		current_app_mode = DEMO_IDLE_MODE;
+		app_mode = DEMO_IDLE_MODE;
 	}
 }
 
 void loop()
 {
 	/* Updates the led controller status */
-	ledCtlr.update(retCode);
-	while (bleCtlr.dequeueBleMsg());
+	ledCtlr.update(ret_code);
+
+  read_sys_time();
+
+	while (bleCtlr.dequeue_ble_msg());
 
 	/*checks the ble connection status, restarts advertising if disconnected */
-	bleCtlr.checkBleConnectionSts();
+	bleCtlr.check_ble_connection_sts();
 
-	if (retCode >= EDK_OK)
+	if (ret_code >= EDK_OK)
 	{
 		/* Retrieves the current label */
-		(void) labelPvr.getLabel(label);
+		(void) labelPvr.get_label(label);
 		
-		switch (currentAppMode)
+		switch (current_app_mode)
 		{
 			/*  Gets the bme688 sensors raw data in app and logs the same based on the selected sensors */
 			case DEMO_RECORDING_MODE:
@@ -323,22 +339,24 @@ void loop()
 				uint8_t i;
                 
 				/* Flushes the buffered sensor data to the current log file */
-				retCode = bme68xDlog.flush();
+				ret_code = bme68xDlog.flush();
 				
-				if (retCode >= EDK_OK)
+				if (ret_code >= EDK_OK)
 				{
-					if (selectedSensor == NUM_BME68X_UNITS)
+
+					if (selected_sensor == NUM_BME68X_UNITS)
 					{
+
 						/* Schedules the next readable sensor */
-						while (sensorMgr.scheduleSensor(i))
+						while (sensorMgr.schedule_sensor(i))
 						{
 							/* Gets the given sensor raw data and sends via ble and log into the SD card */
-							retCode = logSensorData(i);
+							ret_code = log_sensor_data(i);
 						}
 					}
 					else
 					{
-						retCode = logSensorData(selectedSensor);
+						ret_code = log_sensor_data(selected_sensor);
 					}
 				}
 			}
@@ -349,9 +367,11 @@ void loop()
 			case DEMO_TEST_ALGORITHM_MODE:
 			{
 				/* Flushes the buffered sensor data to the current log file */
-				retCode = bsecDlog.flushSensorData(selectedSensor);
-				if (selectedSensor == NUM_OF_SENS)
+				ret_code = bsecDlog.flush_sensor_data(selected_sensor);
+
+				if (selected_sensor == NUM_OF_SENS)
 				{
+
 					for (sensor_num = 0; sensor_num < NUM_OF_SENS; sensor_num++)
 					{
 						/* Callback from the user to read data from the BME688 sensors using parallel mode/forced mode,
@@ -359,10 +379,10 @@ void loop()
 						(void) bsec2[sensor_num].run();
 					}
 				}
-				else if(selectedSensor < NUM_OF_SENS)
+				else if (selected_sensor < NUM_OF_SENS)
 				{
-					(void) bsec2[selectedSensor].run();
-					sensor_num = selectedSensor;
+					(void) bsec2[selected_sensor].run();
+					sensor_num = selected_sensor;
 				}
 			}
 			break;
@@ -372,50 +392,56 @@ void loop()
 	}
 }
 
-demoRetCode logSensorData(uint8_t sensNum)
+demo_ret_code log_sensor_data(uint8_t sens_num)
 {
-	demoRetCode ret;
-	bme68x_data* sensorData[3];
+	demo_ret_code ret;
+	bme68x_data* sensor_data[3];
 
 	/* Returns the selected sensor address */
-	bme68xSensor* sensor = sensorMgr.getSensor(sensNum);
+	bme68x_sensor* sensor = sensorMgr.get_sensor(sens_num);
 
 	/* Retrieves the selected sensor data */
-	ret = sensorMgr.collectData(sensNum, sensorData);
+	ret = sensorMgr.collect_data(sens_num, sensor_data);
+
 	if (ret < EDK_OK)
 	{
 		StaticJsonDocument<BLE_JSON_DOC_SIZE> jsonDoc;
 		JsonObject errorObj = jsonDoc.createNestedObject("errorCode");
 		
-		errorObj["sensor_number"] = sensNum;
+		errorObj["sensor_number"] = sens_num;
 		errorObj["error_code"] = bleController::SENSOR_READ_ERROR;
 
-		bleCtlr.sendNotification(jsonDoc);
+		bleCtlr.send_notification(jsonDoc);
 	}
 	else
 	{
-		for (const auto data : sensorData)
+
+		for (const auto data : sensor_data)
 		{
+
 			if (data != nullptr)
 			{
-				bme68x_data rawData;
-				rawData.temperature = data->temperature;
-				rawData.pressure = data->pressure;
-				rawData.humidity = data->humidity;
-				rawData.gas_resistance = data->gas_resistance;
-				rawData.gas_index = data->gas_index;
+				bme68x_data raw_data;
+				raw_data.temperature = data->temperature;
+				raw_data.pressure = (data->pressure * 0.01f);
+				raw_data.humidity = data->humidity;
+				raw_data.gas_resistance = data->gas_resistance;
+				raw_data.gas_index = data->gas_index;
 
 				/* sends the sensor raw data via ble */
-				bleNotifyBme68xData(rawData, sensNum);
+				ble_notify_bme68x_data(raw_data, sens_num);
 				/* Writes the sensor data to the current log file */
-				bme68xDlog.writeSensorData(&sensNum, &sensor->id, &sensor->mode, data, &sensor->scanCycleIndex, label, retCode);
+				ret = bme68xDlog.write_sensor_data(&sens_num, &sensor->id, &sensor->mode, data,
+				                                 &sensor->scan_cycle_index, label, ret);
+
 				/* Increments scanCycleIndex by one, if cycle completes */
-				if (rawData.gas_index == sensor->heaterProfile.length - 1)
+				if (raw_data.gas_index == sensor->heater_profile.length - 1)
 				{
-					sensor->scanCycleIndex += 1;
-					if (sensor->scanCycleIndex > sensor->heaterProfile.nbRepetitions)
+					sensor->scan_cycle_index += 1;
+
+					if (sensor->scan_cycle_index > sensor->heater_profile.nb_repetitions)
 					{
-						sensor->scanCycleIndex = 1;
+						sensor->scan_cycle_index = 1;
 					}
 				}
 			}
@@ -427,96 +453,103 @@ demoRetCode logSensorData(uint8_t sensNum)
 void bsecCallBack(const bme68x_data input, const bsecOutputs outputs, Bsec2 bsec)
 {
 	/* Sending bme raw data via ble */
-	bleNotifyBme68xData(input, sensor_num);
+	ble_notify_bme68x_data(input, sensor_num);
 	
 	/* Returns the selected sensor address */
-	bme68xSensor *sensor = sensorMgr.getSensor(sensor_num);
-	if(sensor != nullptr)
-	{
-		bsecDlog.writeSensorData(&sensor_num, &sensor->id, &input, &sensor->scanCycleIndex, groundTruth, retCode, buff[sensor_num]);
+	bme68x_sensor *sensor = sensorMgr.get_sensor(sensor_num);
 
-		if (input.gas_index == sensor->heaterProfile.length-1)
+	if (sensor != nullptr)
+	{
+		bsecDlog.write_sensor_data(&sensor_num, &sensor->id, &input, &sensor->scan_cycle_index,
+		                          ground_truth, ret_code, buff[sensor_num]);
+
+		if (input.gas_index == sensor->heater_profile.length - 1)
 		{
-			sensor->scanCycleIndex++;
-			if (sensor->scanCycleIndex > bsecDlog.scanCycles)
+			sensor->scan_cycle_index++;
+
+			if (sensor->scan_cycle_index > bsecDlog.scanCycles)
 			{
-				sensor->scanCycleIndex = 1;
+				sensor->scan_cycle_index = 1;
 			}
 		}
-		
+
 		if (outputs.nOutputs)
 		{
 			/* Sending BSEC output via ble */
-			bleNotifyBsecOutput(outputs, sensor_num);
+			ble_notify_bsec_output(outputs, sensor_num);
+
 			if (sensor != nullptr)
 			{
-				buff[sensor_num].sensorNum = sensor_num;
-				buff[sensor_num].sensorId = sensor->id;
+				buff[sensor_num].sensor_num = sensor_num;
+				buff[sensor_num].sensor_id = sensor->id;
 				buff[sensor_num].outputs = outputs;
-				buff[sensor_num].code = retCode;
-				buff[sensor_num].groundTruth = groundTruth;
+				buff[sensor_num].code = ret_code;
+				buff[sensor_num].ground_truth = ground_truth;
 				/* Writing BSEC output into SD card */
-				retCode = bsecDlog.writeBsecOutput(buff[sensor_num]);
+				ret_code = bsecDlog.write_bsec_output(buff[sensor_num]);
 			}
 		}
 	}
 }
 
-void bleMessageReceived(const bleController::bleMsg &msg, JsonDocument& jsonDoc)
+void bleMessageReceived(const bleController::ble_msg &msg, JsonDocument& jsonDoc)
 {
+
 	switch (msg.id)
 	{
 		case bleController::GET_LABEL_INFO:
-			bleNotifyGetLabelInfo(msg, jsonDoc);
+			ble_notify_get_label_info(msg, jsonDoc);
 		break;
 		case bleController::SET_LABEL_INFO:
-			bleNotifySetLabelInfo(msg, jsonDoc);
+			ble_notify_set_label_info(msg, jsonDoc);
 		break;
 		case bleController::SET_LABEL:
-			bleNotifySetLabel(msg, jsonDoc);
+			ble_notify_set_label(msg, jsonDoc);
 		break;
 		case bleController::GET_RTC_TIME:
-			bleNotifyGetRtcTime(msg, jsonDoc);
+			ble_notify_get_rtc_time(msg, jsonDoc);
 		break;
 		case bleController::SET_RTC_TIME:
-			bleNotifySetRtcTime(msg, jsonDoc);
+			ble_notify_set_rtc_time(msg, jsonDoc);
 		break;
 		case bleController::START_STREAMING:
-			bleNotifyStartStreaming(msg, jsonDoc);
+			ble_notify_start_streaming(msg, jsonDoc);
 		break;
 		case bleController::STOP_STREAMING:
-			bleNotifyStopStreaming(msg, jsonDoc);
+			ble_notify_stop_streaming(msg, jsonDoc);
 		break;
 		case bleController::READ_CONFIG:
-			bleNotifyReadConfig(msg, jsonDoc);
+			ble_notify_read_config(msg, jsonDoc);
 		break;
 		case bleController::SET_APPMODE:
-			bleNotifySetAppmode(msg, jsonDoc);
+			ble_notify_set_appmode(msg, jsonDoc);
 		break;
 		case bleController::GET_APPMODE:
-			bleNotifyGetAppmode(msg, jsonDoc);
+			ble_notify_get_appmode(msg, jsonDoc);
 		break;
 		case bleController::SET_GROUNDTRUTH:
-			bleNotifySetGroundtruth(msg, jsonDoc);
+			ble_notify_set_groundtruth(msg, jsonDoc);
 		break;
 		case bleController::GET_FW_VERSION:
-			bleNotifyGetFwVersion(msg, jsonDoc);
+			ble_notify_get_fw_version(msg, jsonDoc);
 		break;
 		default:
 		break;
 	}
 }
 
-void bleNotifyGetLabelInfo(const bleController::bleMsg &msg, JsonDocument& jsonDoc)
+void ble_notify_get_label_info(const bleController::ble_msg &msg, JsonDocument& jsonDoc)
 {
-	demoRetCode ret;
-	if(currentAppMode != DEMO_IDLE_MODE)
+	demo_ret_code ret;
+
+	if (current_app_mode != DEMO_IDLE_MODE)
 	{
 		jsonDoc[msg.name] = bleController::APP_ALREADY_IN_STREAMING_MODE;
 		return;
 	}
-	ret = configFileRead(BME68X_LABEL_INFO_FILE_EXT);
-	if(ret == EDK_END_OF_FILE)
+	ret = config_file_read(BME68X_LABEL_INFO_FILE_EXT);
+
+	if (ret == EDK_END_OF_FILE)
 	{
 		jsonDoc.clear();
 		jsonDoc.add(EOF);
@@ -535,15 +568,18 @@ void bleNotifyGetLabelInfo(const bleController::bleMsg &msg, JsonDocument& jsonD
 	}
 }
 
-void bleNotifySetLabelInfo(const bleController::bleMsg &msg, JsonDocument& jsonDoc)
+void ble_notify_set_label_info(const bleController::ble_msg &msg, JsonDocument& jsonDoc)
 {
-	demoRetCode ret;
+	demo_ret_code ret;
 	
-	if (currentAppMode == DEMO_RECORDING_MODE)
+	if (current_app_mode == DEMO_RECORDING_MODE)
 	{
-		if (msg.labelInfo.label >= LABEL_TAG_MIN_RANGE && msg.labelInfo.label <= LABEL_TAG_MAX_RANGE)
+
+		if (msg.label_info.label >= LABEL_TAG_MIN_RANGE && msg.label_info.label <= LABEL_TAG_MAX_RANGE)
 		{
-			ret = bme68xDlog.setLabelInfo(msg.labelInfo.label, String(msg.labelInfo.labelName), String(msg.labelInfo.labelDesc));
+			ret = bme68xDlog.set_label_info(msg.label_info.label, String(msg.label_info.label_name),
+			                              String(msg.label_info.label_desc));
+
 			if (ret == EDK_DATALOGGER_LABEL_INFO_FILE_ERROR)
 			{
 				jsonDoc[msg.name] = bleController::LABEL_FILE_OPEN_FAILED;
@@ -568,11 +604,12 @@ void bleNotifySetLabelInfo(const bleController::bleMsg &msg, JsonDocument& jsonD
 	}
 }
 
-void bleNotifySetLabel(const bleController::bleMsg &msg, JsonDocument& jsonDoc)
+void ble_notify_set_label(const bleController::ble_msg &msg, JsonDocument& jsonDoc)
 {
+
 	if (msg.label >= LABEL_TAG_MIN_RANGE && msg.label <= LABEL_TAG_MAX_RANGE)
 	{
-		label = static_cast<gasLabel>(msg.label);
+		label = static_cast<gas_label>(msg.label);
 		jsonDoc[msg.name] = bleController::CMD_VALID;
 	}
 	else
@@ -581,245 +618,303 @@ void bleNotifySetLabel(const bleController::bleMsg &msg, JsonDocument& jsonDoc)
 	}
 }
 
-void bleNotifyGetRtcTime(const bleController::bleMsg &msg, JsonDocument& jsonDoc)
+void ble_notify_get_rtc_time(const bleController::ble_msg &msg, JsonDocument& jsonDoc)
 {
 	jsonDoc[msg.name] = bleController::CMD_VALID;
-	jsonDoc["value"] = utils::getRtc().now().unixtime();
+	jsonDoc["value"] = utils::get_rtc().now().unixtime();
 }
 
-void bleNotifySetRtcTime(const bleController::bleMsg &msg, JsonDocument& jsonDoc)
+void ble_notify_set_rtc_time(const bleController::ble_msg &msg, JsonDocument& jsonDoc)
 {
 	jsonDoc[msg.name] = bleController::CMD_VALID;
-	utils::getRtc().adjust(DateTime(msg.rtcTime));
+	utils::get_rtc().adjust(DateTime(msg.rtc_time));
 }
 
-void bleNotifyStartStreaming(const bleController::bleMsg &msg, JsonDocument& jsonDoc)
+void ble_notify_start_streaming(const bleController::ble_msg &msg, JsonDocument& jsonDoc)
 {
-	bsec_virtual_sensor_t bsecOutputList[BSEC_NUMBER_OUTPUTS];
-	bleController::cmdStatus bleRetCode = bleController::CMD_VALID;
-	const bleController::bleBsecMsg& bsecMsg = msg.bsec;
+	bsec_virtual_sensor_t bsec_output_list[BSEC_NUMBER_OUTPUTS];
+	bleController::cmd_status ble_ret_code = bleController::CMD_VALID;
+	const bleController::ble_bsec_msg& bsecMsg = msg.bsec;
 
 	/* Initializes the SD and RTC module */
-	retCode = utils::begin();
+	ret_code = utils::begin();
 
-	if (retCode >= EDK_OK)
+	if (ret_code >= EDK_OK)
 	{
+
 		//Flushing the contents of the buffer to the rawdata file generated during the previous run
-		if(currentAppMode == DEMO_TEST_ALGORITHM_MODE)
+		if (current_app_mode == DEMO_TEST_ALGORITHM_MODE)
 		{
-			bsecDlog.flushSensorData(selectedSensor);
+			bsecDlog.flush_sensor_data(selected_sensor);
 		}
-		else if(currentAppMode == DEMO_RECORDING_MODE)
+		else if (current_app_mode == DEMO_RECORDING_MODE)
 		{
 			bme68xDlog.flush();
 		}
 		
-		if (appMode == DEMO_TEST_ALGORITHM_MODE)
+		if (app_mode == DEMO_TEST_ALGORITHM_MODE)
 		{
-			isBsecConfAvailable = utils::getFileWithExtension(bsecConfFileName, BSEC_CONFIG_FILE_EXT);
-			isAIConfAvailable = utils::getFileWithExtension(aiConfFileName, AI_CONFIG_FILE_EXT);
+			is_bsec_conf_available = utils::get_file_with_extension(bsec_conf_file_name, BSEC_CONFIG_FILE_EXT);
+			is_ai_conf_available = utils::get_file_with_extension(ai_conf_file_name, AI_CONFIG_FILE_EXT);
 
 			/* checks the availability of BSEC configuration file */
-			if (isBsecConfAvailable)
+			if (is_bsec_conf_available)
 			{
-				if(isAIConfAvailable)
+
+				if (is_ai_conf_available)
 				{
-					bsec_virtual_sensor_t bsecOutputList[BSEC_NUMBER_OUTPUTS];
-					float sampleRate = -1;
+					bsec_virtual_sensor_t bsec_output_list[BSEC_NUMBER_OUTPUTS];
+					float sample_rate = -1;
 					
 					/* Check added to ensure support for multi instance in test algorithm mode */
-					if(bsecMsg.selectedSensor > NUM_OF_SENS) 
+					if (bsecMsg.selected_sensor > NUM_OF_SENS) 
 					{
-						bleRetCode = bleController::BSEC_SELECTED_SENSOR_INVALID;
-						jsonDoc[msg.name] = bleRetCode;
+						ble_ret_code = bleController::BSEC_SELECTED_SENSOR_INVALID;
+						jsonDoc[msg.name] = ble_ret_code;
 						return;
 					}
 					
-					commMuxBegin(Wire, SPI);
+					comm_mux_begin(Wire, SPI);
 					
 					for (uint8_t i = 0; i < bsecMsg.len; i++)
 					{
-						bsecOutputList[i] = static_cast<bsec_virtual_sensor_t>(bsecMsg.outputId[i]);
+						bsec_output_list[i] = static_cast<bsec_virtual_sensor_t>(bsecMsg.output_id[i]);
 					}
 					
-					for(uint8_t i = 0; i < NUM_OF_SENS; i++)
+					for (uint8_t i = 0; i < NUM_OF_SENS; i++)
 					{
-						bme68xSensor *sensor = sensorMgr.getSensor(i);
+						bme68x_sensor *sensor = sensorMgr.get_sensor(i);
+
 						if (sensor == nullptr)
 						{
-							bleRetCode = bleController::BSEC_SELECTED_SENSOR_INVALID;
-							jsonDoc[msg.name] = bleRetCode;
+							ble_ret_code = bleController::BSEC_SELECTED_SENSOR_INVALID;
+							jsonDoc[msg.name] = ble_ret_code;
 							return;
 						}
 						
 						/* Sets the Communication interface for the sensors */
-						comm[i] = commMuxSetConfig(Wire, SPI, i, comm[i]);
-						sensor->scanCycleIndex = 1;
+						comm[i] = comm_mux_set_config(Wire, SPI, i, comm[i]);
+						sensor->scan_cycle_index = 1;
 						
 						/* Assigning a chunk of memory block to the bsecInstance */
-						bsec2[i].allocateMemory(bsecMemBlock[i]);
+						bsec2[i].allocateMemory(bsec_mem_block[i]);
 						
 						/* Whenever new data is available call the newDataCallback function */
 						bsec2[i].attachCallback(bsecCallBack);
 						
-						switch (bsecMsg.sampleRate)
+						switch (bsecMsg.sample_rate)
 						{
 							case bleController::ULP:
-								sampleRate = BSEC_SAMPLE_RATE_ULP;
+								sample_rate = BSEC_SAMPLE_RATE_ULP;
 							break;
 							case bleController::LP:
-								sampleRate = BSEC_SAMPLE_RATE_LP;
+								sample_rate = BSEC_SAMPLE_RATE_LP;
 							break;
 							case bleController::HP:
-								sampleRate = BSEC_SAMPLE_RATE_SCAN;
+								sample_rate = BSEC_SAMPLE_RATE_SCAN;
 							break;
 							default:
 							break;
 						}
 						
-						if (!bsec2[i].begin(BME68X_SPI_INTF, commMuxRead, commMuxWrite, commMuxDelay, &comm[i]))
+						if (!bsec2[i].begin(BME68X_SPI_INTF, comm_mux_read, comm_mux_write, comm_mux_delay, &comm[i]))
 						{
-							bleRetCode = bleController::BSEC_INIT_ERROR;
+							ble_ret_code = bleController::BSEC_INIT_ERROR;
 						}
-						if(i == 0)
+
+						if (i == 0)
 						{
-							if (configureBsecLogging(aiConfFileName, bsecConfFileName, bsecConfig, bsecMsg.selectedSensor) < EDK_OK)
+
+							if (configure_bsec_logging(ai_conf_file_name, bsec_conf_file_name, bsec_config, bsecMsg.selected_sensor) < EDK_OK)
 							{
-								bleRetCode = bleController::BSEC_CONFIG_FILE_ERROR;
-								jsonDoc[msg.name] = bleRetCode;
+								ble_ret_code = bleController::BSEC_CONFIG_FILE_ERROR;
+								jsonDoc[msg.name] = ble_ret_code;
 								return;
 							}
 						}
-						if (!bsec2[i].setConfig(bsecConfig))
+
+						/* Checking the aiconfig type and subscription is same (classification/regression) */
+						if (strcmp(bsecDlog.ai_config_type, "classification") == 0)
 						{
-							bleRetCode = bleController::BSEC_SET_CONFIG_ERROR;
+							
+							for (int i = 0; i < bsecMsg.len; i++)
+							{
+								
+								switch (bsec_output_list[i])
+								{
+									case BSEC_OUTPUT_REGRESSION_ESTIMATE_1:
+									case BSEC_OUTPUT_REGRESSION_ESTIMATE_2:
+									case BSEC_OUTPUT_REGRESSION_ESTIMATE_3:
+									case BSEC_OUTPUT_REGRESSION_ESTIMATE_4:
+										ble_ret_code = bleController::AI_CONFIG_AND_SUBSCRIPTION_MISSMATCH;
+										jsonDoc[msg.name] = ble_ret_code;
+										return;
+									default: break;
+								}
+							}
 						}
-						else if (!bsec2[i].updateSubscription(bsecOutputList, bsecMsg.len, sampleRate))
+						else if (strcmp(bsecDlog.ai_config_type, "regression") == 0)
 						{
-							bleRetCode = bleController::BSEC_UPDATE_SUBSCRIPTION_ERROR;
+							
+							for (int i = 0; i < bsecMsg.len; i++)
+							{
+								
+								switch (bsec_output_list[i])
+								{
+									case BSEC_OUTPUT_GAS_ESTIMATE_1:
+									case BSEC_OUTPUT_GAS_ESTIMATE_2:
+									case BSEC_OUTPUT_GAS_ESTIMATE_3:
+									case BSEC_OUTPUT_GAS_ESTIMATE_4:
+										ble_ret_code = bleController::AI_CONFIG_AND_SUBSCRIPTION_MISSMATCH;
+										jsonDoc[msg.name] = ble_ret_code;
+										return;
+									default: break;
+								}
+							}
+						}
+
+						/* Sets the sensor ID when .bmeconfig file is not initilized */
+						if (sensor->id == 0)
+						{
+							sensor->id = bsec2[i].sensor.getUniqueId();
+						}
+
+						if (!bsec2[i].setConfig(bsec_config))
+						{
+							ble_ret_code = bleController::BSEC_SET_CONFIG_ERROR;
+						}
+						else if (!bsec2[i].updateSubscription(bsec_output_list, bsecMsg.len, sample_rate))
+						{
+							ble_ret_code = bleController::BSEC_UPDATE_SUBSCRIPTION_ERROR;
 						}
 						else if (!bsec2[i].run())
 						{
-							bleRetCode = bleController::BSEC_RUN_ERROR;
+							ble_ret_code = bleController::BSEC_RUN_ERROR;
 						}
 						else
 						{
-							const bme68x_heatr_conf& heaterConf = bsec2[i].sensor.getHeaterConfiguration();
-							if (heaterConf.profile_len == 0)
+							const bme68x_heatr_conf& heater_conf = bsec2[i].sensor.getHeaterConfiguration();
+
+							if (heater_conf.profile_len == 0)
 							{
-								jsonDoc["temperature"] = heaterConf.heatr_temp;
-								jsonDoc["duration"] = ((int)heaterConf.heatr_dur) * GAS_WAIT_SHARED;
+								jsonDoc["temperature"] = heater_conf.heatr_temp;
+								jsonDoc["duration"] = ((int32_t)heater_conf.heatr_dur) * GAS_WAIT_SHARED;
 								jsonDoc["mode"] = "forced";
 								
-								sensor->heaterProfile.length = heaterConf.profile_len;
-								sensor->heaterProfile.duration[0] = heaterConf.heatr_dur;
-								sensor->heaterProfile.temperature[0] = heaterConf.heatr_temp;
+								sensor->heater_profile.length = heater_conf.profile_len;
+								sensor->heater_profile.duration[0] = heater_conf.heatr_dur;
+								sensor->heater_profile.temperature[0] = heater_conf.heatr_temp;
 								sensor->mode = BME68X_FORCED_MODE;
 							}
-							else if ((heaterConf.heatr_dur_prof != nullptr) && (heaterConf.heatr_temp_prof != nullptr))
+							else if ((heater_conf.heatr_dur_prof != nullptr) && (heater_conf.heatr_temp_prof != nullptr))
 							{
 								JsonArray heaterDurationArray = jsonDoc.createNestedArray("duration");
 								JsonArray heaterTemperatureArray = jsonDoc.createNestedArray("temperature");
-								for (uint8_t i = 0; i < heaterConf.profile_len; i++)
+
+								for (uint8_t i = 0; i < heater_conf.profile_len; i++)
 								{
-									heaterDurationArray.add(((int)heaterConf.heatr_dur_prof[i]) * GAS_WAIT_SHARED);
-									heaterTemperatureArray.add(heaterConf.heatr_temp_prof[i]);
-									sensor->heaterProfile.duration[i] = heaterConf.heatr_dur_prof[i];
-									sensor->heaterProfile.temperature[i] = heaterConf.heatr_temp_prof[i];
+									heaterDurationArray.add(((int32_t)heater_conf.heatr_dur_prof[i]) * GAS_WAIT_SHARED);
+									heaterTemperatureArray.add(heater_conf.heatr_temp_prof[i]);
+									sensor->heater_profile.duration[i] = heater_conf.heatr_dur_prof[i];
+									sensor->heater_profile.temperature[i] = heater_conf.heatr_temp_prof[i];
 								}
 								jsonDoc["mode"] = "parallel";
 
-								sensor->heaterProfile.length = heaterConf.profile_len;
+								sensor->heater_profile.length = heater_conf.profile_len;
 								sensor->mode = BME68X_PARALLEL_MODE;
 							}
 							
-							selectedSensor = bsecMsg.selectedSensor;
-							currentAppMode = DEMO_TEST_ALGORITHM_MODE;
+							selected_sensor = bsecMsg.selected_sensor;
+							current_app_mode = DEMO_TEST_ALGORITHM_MODE;
 						}
 					}
 				}
 				else
 				{
-					bleRetCode = bleController::AI_CONFIG_FILE_MISSING;
+					ble_ret_code = bleController::AI_CONFIG_FILE_MISSING;
 				}
 			}
 			else
 			{
-				bleRetCode = bleController::BSEC_CONFIG_FILE_MISSING;
+				ble_ret_code = bleController::BSEC_CONFIG_FILE_MISSING;
 			}
 		}
 		else
 		{
-			isBme68xConfAvailable = utils::getFileWithExtension(bme68xConfFileName, BME68X_CONFIG_FILE_EXT);
+			is_bme68x_conf_available = utils::get_file_with_extension(bme68x_conf_file_name, BME68X_CONFIG_FILE_EXT);
+
 			/* checks the availability of BME board configuration file */
-			if (isBme68xConfAvailable)
+			if (is_bme68x_conf_available)
 			{
-				if (configureSensorLogging(bme68xConfFileName) < EDK_OK)
+
+				if (configure_sensor_logging(bme68x_conf_file_name) < EDK_OK)
 				{
-					bleRetCode = bleController::SENSOR_INITIALIZATION_FAILED;
-					retCode = EDK_SENSOR_INITIALIZATION_FAILED;
+					ble_ret_code = bleController::SENSOR_INITIALIZATION_FAILED;
+					ret_code = EDK_SENSOR_INITIALIZATION_FAILED;
 				}
 				else
 				{
-					selectedSensor = bsecMsg.selectedSensor;
-					currentAppMode = DEMO_RECORDING_MODE;
+					selected_sensor = bsecMsg.selected_sensor;
+					current_app_mode = DEMO_RECORDING_MODE;
 				}
 			}
 			else
 			{
-				bleRetCode = bleController::SENSOR_CONFIG_MISSING;
-				retCode = EDK_SENSOR_CONFIG_MISSING_ERROR;
+				ble_ret_code = bleController::SENSOR_CONFIG_MISSING;
+				ret_code = EDK_SENSOR_CONFIG_MISSING_ERROR;
 			}
 		}
-		jsonDoc[msg.name] = bleRetCode;
+		jsonDoc[msg.name] = ble_ret_code;
 	}
 	else
 	{
 		jsonDoc[msg.name] = bleController::SD_CARD_INIT_ERROR;
-		retCode = EDK_SD_CARD_INIT_ERROR;
-		currentAppMode = DEMO_IDLE_MODE;
+		ret_code = EDK_SD_CARD_INIT_ERROR;
+		current_app_mode = DEMO_IDLE_MODE;
 	}
 }
 
-void bleNotifyStopStreaming(const bleController::bleMsg &msg, JsonDocument& jsonDoc)
+void ble_notify_stop_streaming(const bleController::ble_msg &msg, JsonDocument& jsonDoc)
 {
 	jsonDoc[msg.name] = bleController::CMD_VALID;
 	
 	//Flushing the contents of the buffer to the rawdata file generated during the previous run
-	if(currentAppMode == DEMO_TEST_ALGORITHM_MODE)
+	if (current_app_mode == DEMO_TEST_ALGORITHM_MODE)
 	{
-		bsecDlog.flushSensorData(selectedSensor);
+		bsecDlog.flush_sensor_data(selected_sensor);
 	}
 	else
 	{
 		bme68xDlog.flush();
 	}
-	selectedSensor = 0;
+	selected_sensor = 0;
 	
-	currentAppMode = DEMO_IDLE_MODE;
-	appMode = DEMO_IDLE_MODE;
+	current_app_mode = DEMO_IDLE_MODE;
+	app_mode = DEMO_IDLE_MODE;
 }
 
-void bleNotifyReadConfig(const bleController::bleMsg &msg, JsonDocument& jsonDoc)
+void ble_notify_read_config(const bleController::ble_msg &msg, JsonDocument& jsonDoc)
 {
-	demoRetCode ret;
-	if(currentAppMode != DEMO_IDLE_MODE)
+	demo_ret_code ret;
+
+	if (current_app_mode != DEMO_IDLE_MODE)
 	{
 		jsonDoc[msg.name] = bleController::APP_ALREADY_IN_STREAMING_MODE;
 	}
-
-	else if (msg.fileType >= bleController::BMECONFIG && msg.fileType <= bleController::AICONFIG)
+	else if (msg.file_type >= bleController::BMECONFIG && msg.file_type <= bleController::AICONFIG)
 	{
-		if(msg.fileType == bleController::BMECONFIG)
+
+		if (msg.file_type == bleController::BMECONFIG)
 		{
-			configFileName = BME68X_CONFIG_FILE_EXT;
+			config_file_name = BME68X_CONFIG_FILE_EXT;
 		}
 		else
 		{
-			configFileName = AI_CONFIG_FILE_EXT;
+			config_file_name = AI_CONFIG_FILE_EXT;
 		}
-		ret = configFileRead(configFileName);
-		if(ret == EDK_END_OF_FILE)
+		ret = config_file_read(config_file_name);
+
+		if (ret == EDK_END_OF_FILE)
 		{
 			jsonDoc.clear();
 			jsonDoc.add(EOF);
@@ -830,7 +925,8 @@ void bleNotifyReadConfig(const bleController::bleMsg &msg, JsonDocument& jsonDoc
 		}
 		else if (ret == EDK_EXTENSION_NOT_AVAILABLE)
 		{
-			if(configFileName == BME68X_CONFIG_FILE_EXT)
+
+			if (config_file_name == BME68X_CONFIG_FILE_EXT)
 			{
 				jsonDoc[msg.name] = bleController::SENSOR_CONFIG_MISSING;
 			}
@@ -850,13 +946,15 @@ void bleNotifyReadConfig(const bleController::bleMsg &msg, JsonDocument& jsonDoc
 	}
 }
 
-void bleNotifySetAppmode(const bleController::bleMsg &msg, JsonDocument& jsonDoc)
+void ble_notify_set_appmode(const bleController::ble_msg &msg, JsonDocument& jsonDoc)
 {
+
 	if (msg.mode >= DEMO_RECORDING_MODE && msg.mode <= DEMO_TEST_ALGORITHM_MODE)
 	{
-		if(currentAppMode == DEMO_IDLE_MODE)
+
+		if (current_app_mode == DEMO_IDLE_MODE)
 		{
-			appMode = (demoAppMode)msg.mode;
+			app_mode = (demo_app_mode)msg.mode;
 			jsonDoc[msg.name] = bleController::CMD_VALID;
 		}
 		else
@@ -870,19 +968,19 @@ void bleNotifySetAppmode(const bleController::bleMsg &msg, JsonDocument& jsonDoc
 	}
 }
 
-void bleNotifyGetAppmode(const bleController::bleMsg &msg, JsonDocument& jsonDoc)
+void ble_notify_get_appmode(const bleController::ble_msg &msg, JsonDocument& jsonDoc)
 {
 	jsonDoc[msg.name] = bleController::CMD_VALID;
-	jsonDoc["appMode"] = (int)currentAppMode;
+	jsonDoc["appMode"] = (int32_t)current_app_mode;
 }
 
-void bleNotifySetGroundtruth(const bleController::bleMsg &msg, JsonDocument& jsonDoc)
+void ble_notify_set_groundtruth(const bleController::ble_msg &msg, JsonDocument& jsonDoc)
 {
-	groundTruth = msg.groundTruth;
+	ground_truth = msg.ground_truth;
 	jsonDoc[msg.name] = bleController::CMD_VALID;
 }
 
-void bleNotifyBsecOutput(const bsecOutputs& outputs, const uint8_t sensNum)
+void ble_notify_bsec_output(const bsecOutputs& outputs, const uint8_t sens_num)
 {
 	StaticJsonDocument<BLE_JSON_DOC_SIZE> jsonDoc;
 	JsonArray bsecOutputArray = jsonDoc.createNestedArray("bsec");
@@ -892,68 +990,73 @@ void bleNotifyBsecOutput(const bsecOutputs& outputs, const uint8_t sensNum)
 		const bsec_output_t& output = outputs.output[i];
 		JsonObject bsecOutputObj = bsecOutputArray.createNestedObject();
 		
-		bsecOutputObj["sensor_num"] = sensNum;
+		bsecOutputObj["sensor_num"] = sens_num;
 		bsecOutputObj["id"] = output.sensor_id;
 		bsecOutputObj["signal"] = output.signal;
 		bsecOutputObj["accuracy"] = output.accuracy;
 	}
 	
-	bleCtlr.sendNotification(jsonDoc);
+	bleCtlr.send_notification(jsonDoc);
 }
 
-void bleNotifyBme68xData(const bme68x_data& data, const uint8_t sensNum)
+void ble_notify_bme68x_data(const bme68x_data& data, const uint8_t sens_num)
 {
 	StaticJsonDocument<BLE_JSON_DOC_SIZE> jsonDoc;
 	JsonObject bme68xObj = jsonDoc.createNestedObject("bme68x");
 	
-	bme68xObj["sensor_number"] = sensNum;
+	bme68xObj["sensor_number"] = sens_num;
 	bme68xObj["temperature"] = data.temperature;
 	bme68xObj["pressure"] = data.pressure;
 	bme68xObj["humidity"] = data.humidity;
 	bme68xObj["gas_resistance"] = data.gas_resistance;
 	bme68xObj["gas_index"] = data.gas_index;
 
-	bleCtlr.sendNotification(jsonDoc);
+	bleCtlr.send_notification(jsonDoc);
 }
 
-void bleNotifyGetFwVersion(const bleController::bleMsg &msg, JsonDocument& jsonDoc)
+void ble_notify_get_fw_version(const bleController::ble_msg &msg, JsonDocument& jsonDoc)
 {
 	jsonDoc[msg.name] = bleController::CMD_VALID;
 	jsonDoc["FirmwareVersion"] = FIRMWARE_VERSION;
 }
 
-demoRetCode configureSensorLogging(const String& bmeConfigFile)
+demo_ret_code configure_sensor_logging(const String& bme_config_file)
 {
-	demoRetCode ret = sensorMgr.begin(bmeConfigFile);
+	demo_ret_code ret = sensorMgr.begin(bme_config_file);
+
 	if (ret >= EDK_OK)
 	{
-		ret = bme68xDlog.begin(bmeConfigFile);
+		ret = bme68xDlog.begin(bme_config_file);
 	}
 	return ret;
 }
 
-demoRetCode configureBsecLogging(const String& aiConfigFile, const String& bsecConfigFile, uint8_t bsecConfigStr[BSEC_MAX_PROPERTY_BLOB_SIZE], uint8_t sensorNum)
+demo_ret_code configure_bsec_logging(const String& ai_config_file, const String& bsec_config_file,
+                                 uint8_t bsec_config_str[BSEC_MAX_PROPERTY_BLOB_SIZE], uint8_t sensor_num)
 {
-	memset(bsecConfigStr, 0, BSEC_MAX_PROPERTY_BLOB_SIZE);
-	demoRetCode ret = bsecDlog.begin(aiConfigFile, bsec2[0].version, sensorNum);
+	memset(bsec_config_str, 0, BSEC_MAX_PROPERTY_BLOB_SIZE);
+	demo_ret_code ret = bsecDlog.begin(ai_config_file, bsec2[0].version, sensor_num);
+
 	if (ret >= EDK_OK)
 	{
-		ret = utils::getBsecConfig(bsecConfigFile, bsecConfigStr);
+		ret = utils::get_bsec_config(bsec_config_file, bsec_config_str);
 	}
 	return ret;
 }
 
-demoRetCode configFileRead(const String& configFile)
+demo_ret_code config_file_read(const String& config_file)
 {
-	demoRetCode ret;
-	static bool firstTime = true;
+	demo_ret_code ret;
+	static bool first_time = true;
 	StaticJsonDocument<BLE_JSON_DOC_SIZE> jsonDoc;
 
-	while ((ret = utils::readFile(configFile, FILE_DATA_READ_SIZE, configFileData)) == EDK_OK)
+	while ((ret = utils::read_file(config_file, FILE_DATA_READ_SIZE, config_file_data)) == EDK_OK)
 	{
-		if(firstTime)
+
+		if (first_time)
 		{
-			if (configFile == BME68X_LABEL_INFO_FILE_EXT)
+
+			if (config_file == BME68X_LABEL_INFO_FILE_EXT)
 			{
 				jsonDoc["getlabelinfo"] = bleController::CMD_VALID;
 			}
@@ -961,13 +1064,25 @@ demoRetCode configFileRead(const String& configFile)
 			{
 				jsonDoc["readconfig"] = bleController::CMD_VALID;
 			}
-			bleCtlr.sendNotification(jsonDoc);
-			firstTime = false;
+			bleCtlr.send_notification(jsonDoc);
+			first_time = false;
 		}
 		jsonDoc.clear();
-		jsonDoc.add(configFileData);
-		bleCtlr.sendNotification(jsonDoc);
+		jsonDoc.add(config_file_data);
+		bleCtlr.send_notification(jsonDoc);
 	}
-	firstTime = true;
+	first_time = true;
 	return ret;
+}
+
+void read_sys_time()
+{
+  while (Serial.available()) {
+    String rx_msg;
+
+    rx_msg = Serial.readStringUntil('\n');
+    received_sys_time = rx_msg.toInt();
+
+    utils::get_rtc().adjust(DateTime(received_sys_time));
+  }
 }

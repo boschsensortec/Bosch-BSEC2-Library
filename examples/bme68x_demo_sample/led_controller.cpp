@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	    led_controller.cpp
- * @date		11 April 2023
- * @version		2.0.9
+ * @date		04 Dec 2023
+ * @version		2.1.4
  * 
  * @brief    	led controller
  *
@@ -47,7 +47,7 @@
  */
 ledController::ledController()
 {
-	previousRetCode = EDK_OK;
+	previous_ret_code = EDK_OK;
 }
 
 /*!
@@ -56,51 +56,55 @@ ledController::ledController()
 void ledController::begin()
 {
 	/* LED pin initialization for runtime monitoring and error indication */
-    pinMode(PIN_LED, OUTPUT);
-    digitalWrite(PIN_LED, LOW);
+	pinMode(PIN_LED, OUTPUT);
+	digitalWrite(PIN_LED, LOW);
 
-	_ledOn = false;
+	_led_on = false;
 }
 
 /*!
  * @brief This function updates the led blinking pattern according to the
  * 		  provided period
  */
-void ledController::switchLed(uint32_t period)
+void ledController::switch_led(uint32_t period)
 {
-	uint32_t timeStamp = millis();
-	if ((timeStamp - _timeStamp) >= period)
+	uint32_t time_stamp = millis();
+
+	if ((time_stamp - _time_stamp) >= period)
 	{
-		if (_ledOn)
+
+		if (_led_on)
 		{
 			digitalWrite(PIN_LED, LOW);
-			_ledOn = false;
+			_led_on = false;
 		}
 		else
 		{
 			digitalWrite(PIN_LED, HIGH);
-			_ledOn = true;
+			_led_on = true;
 		}
-		_timeStamp = timeStamp;
+		_time_stamp = time_stamp;
 	}
 }
 
 /*!
  * @brief This function updates the led controller status
  */
-void ledController::update(demoRetCode retcode)
+void ledController::update(demo_ret_code retcode)
 {
+
 	if (retcode >= EDK_OK)
 	{
-		switchLed(LED_OK_PERIOD);
+		switch_led(LED_OK_PERIOD);
 	}
 	else
 	{
-		if (retcode != previousRetCode)
+
+		if (retcode != previous_ret_code)
 		{
-			Serial.println("Error code = " + String((int) retcode));
-			previousRetCode = retcode;
+			Serial.println("Error code = " + String((int32_t) retcode));
+			previous_ret_code = retcode;
 		}
-		switchLed(LED_ERROR_PERIOD);
+		switch_led(LED_ERROR_PERIOD);
 	}
 }

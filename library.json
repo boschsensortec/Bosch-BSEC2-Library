@@ -1,12 +1,12 @@
 {
-  "name": "BSEC2 Software Library",
+  "name": "bsec2",
   "description": "Bosch Sensortec Environmental Cluster (BSEC) Software library for use with the BME68x has been conceptualized to provide higher-level signal processing and fusion for the BME68x. The library receives compensated sensor values from the sensor API. It processes the BME68x signals to provide the requested sensor outputs.",
   "homepage": "https://www.bosch-sensortec.com/software-tools/software/bme688-software/",
   "repository": {
     "type": "git",
     "url": "https://github.com/boschsensortec/Bosch-BSEC2-Library"
   },
-  "version": "1.6.2400",
+  "version": "1.7.2502",
   "authors": {
     "name": "Bosch Sensortec",
     "email": "contact@bosch-sensortec.com"

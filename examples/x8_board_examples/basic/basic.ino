@@ -18,7 +18,7 @@
  */
 
 #include <bsec2.h>
-#include "commMux.h"
+#include <commMux\commMux.h>
 
 /* Macros used */
 /* Number of sensors to operate*/
@@ -48,7 +48,7 @@ void newDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bse
 
 /* Create an array of objects of the class Bsec2 */
 Bsec2 envSensor[NUM_OF_SENS];
-commMux communicationSetup[NUM_OF_SENS];
+comm_mux communicationSetup[NUM_OF_SENS];
 uint8_t bsecMemBlock[NUM_OF_SENS][BSEC_INSTANCE_SIZE];
 uint8_t sensor = 0;
 
@@ -68,7 +68,7 @@ void setup(void)
 
     /* Initialize the communication interfaces */
     Serial.begin(115200);
-    commMuxBegin(Wire, SPI);
+    comm_mux_begin(Wire, SPI);
     pinMode(PANIC_LED, OUTPUT);
     delay(100);
     /* Valid for boards with USB-COM. Wait until the port is open */
@@ -77,19 +77,19 @@ void setup(void)
     for (uint8_t i = 0; i < NUM_OF_SENS; i++)
     {        
         /* Sets the Communication interface for the sensors */
-        communicationSetup[i] = commMuxSetConfig(Wire, SPI, i, communicationSetup[i]);
+        communicationSetup[i] = comm_mux_set_config(Wire, SPI, i, communicationSetup[i]);
 
         /* Assigning a chunk of memory block to the bsecInstance */
          envSensor[i].allocateMemory(bsecMemBlock[i]);
 
         /* Initialize the library and interfaces */
-        if (!envSensor[i].begin(BME68X_SPI_INTF, commMuxRead, commMuxWrite, commMuxDelay, &communicationSetup[i]))
+        if (!envSensor[i].begin(BME68X_SPI_INTF, comm_mux_read, comm_mux_write, comm_mux_delay, &communicationSetup[i]))
         {
             checkBsecStatus (envSensor[i]);
         }
 
         /* Subscribe to the desired BSEC2 outputs */
-        if (!envSensor[i].updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_LP))
+        if (!envSensor[i].updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_ULP))
         {
             checkBsecStatus (envSensor[i]);
         }

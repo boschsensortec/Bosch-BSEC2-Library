@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	bme68x_datalogger.h
- * @date	11 April 2023
- * @version	2.0.9
+ * @date	04 Dec 2023
+ * @version	2.1.4
  * 
  * @brief	Header file for the bme68x datalogger
  * 
@@ -54,7 +54,7 @@
 #include <iostream>
 #include <ArduinoJson.h>
 
-#define DOC_SIZE	50000
+#define DOC_SIZE	UINT32_C(50000)
 
 /*!
  * @brief : Class library that holds functionality of the bme68x datalogger
@@ -62,33 +62,33 @@
 class bme68xDataLogger
 {
 private:
-	String _configName, _logFileName, _labelFileName;
+	String _config_name, _log_file_name, _label_file_name;
 	std::stringstream _ss;
-	unsigned long _sensorDataPos = 0;
-    int _fileCounter = 1;
-    bool _endOfLine = false;
+	uint32_t _sensor_data_pos = 0;
+	uint32_t _file_counter = 1;
+	bool _end_of_line = false;
 		
 	/*!
 	 * @brief : This function creates a bme68x datalogger output file with .bmerawdata extension
 	 * 
      * @return  bosch error code
 	 */
-	demoRetCode createLogFile();
+	demo_ret_code create_log_file();
 
 	/*!
 	 * @brief : This function creates a bme68x label information file with .bmelabelinfo extension
 	 * 
      * @return  bosch error code
 	 */
-	demoRetCode createLabelInfoFile();
+	demo_ret_code create_label_info_file();
 public:
-    StaticJsonDocument<DOC_SIZE>	labelDoc;
+	StaticJsonDocument<DOC_SIZE>	label_doc;
 	
 	/*!
      * @brief : The constructor of the bme68xDataLogger class
      *        	Creates an instance of the class
      */
-    bme68xDataLogger();
+	bme68xDataLogger();
 	
 	/*!
 	 * @brief : This function configures the datalogger using the provided sensor config file
@@ -97,14 +97,14 @@ public:
      * 
      * @return  bosch error code
 	 */
-    demoRetCode begin(const String& configName = "");
+	demo_ret_code begin(const String& configName = "");
 	
 	/*!
 	 * @brief : This function flushes the buffered sensor data to the current log file
 	 * 
      * @return  bosch error code
 	 */
-	demoRetCode flush();
+	demo_ret_code flush();
 	
 	/*!
 	 * @brief : This function writes the sensor data to the current log file.
@@ -119,8 +119,9 @@ public:
      * 
      * @return  bosch error code
 	 */
-    demoRetCode writeSensorData(const uint8_t* num, const uint32_t* sensorId, const uint8_t* sensorMode, 
-												const bme68x_data* bme68xData, const uint32_t* scanCycleIndex, gasLabel label, demoRetCode code);
+	demo_ret_code write_sensor_data(const uint8_t* num, const uint32_t* sensor_id, const uint8_t* sensor_mode, 
+							    const bme68x_data* bme68xData, const uint32_t* scan_cycle_index,
+							    gas_label label, demo_ret_code code);
 	/*!
 	 * @brief : This function stores the labelTag, labelName and labelDescription to the .bmelabelinfo file.
 	 * 
@@ -130,7 +131,7 @@ public:
 	 * 
      * @return  bosch error code
 	 */											
-	demoRetCode setLabelInfo(int labelTag,const String& labelName, const String&  labelDesc);
+	demo_ret_code set_label_info(int32_t label_tag,const String& label_name, const String&  label_desc);
 };
 
 #endif

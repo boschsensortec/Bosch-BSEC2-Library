@@ -76,7 +76,7 @@ void setup(void)
     }
 
     /* Subsribe to the desired BSEC2 outputs */
-    if (!envSensor.updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_LP))
+    if (!envSensor.updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_ULP))
     {
         checkBsecStatus(envSensor);
     }

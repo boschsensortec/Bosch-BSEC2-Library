@@ -31,10 +31,28 @@
 #endif
 
 #include <bsec2.h>
+
+#define CLASSIFICATION	1
+#define REGRESSION		  2
+
 /* Configuration for two class classification used here
  * For four class classification please use configuration under config/FieldAir_HandSanitizer_Onion_Cinnamon
  */
-#include "config/FieldAir_HandSanitizer/FieldAir_HandSanitizer.h"
+/* Note : 
+          For the classification output from BSEC algorithm set OUTPUT_MODE macro to CLASSIFICATION.
+          For the regression output from BSEC algorithm set OUTPUT_MODE macro to REGRESSION.
+*/
+#define OUTPUT_MODE   CLASSIFICATION
+
+#if (OUTPUT_MODE == CLASSIFICATION)
+  const uint8_t bsec_config[] = {
+                                  #include "config/FieldAir_HandSanitizer/bsec_selectivity.txt"
+                                };
+#elif (OUTPUT_MODE == REGRESSION)
+  const uint8_t bsec_config[] = {
+                                  #include "config/bme688/bme688_reg_18v_300s_4d/bsec_selectivity.txt"
+                                };
+#endif
 
 /* Macros used */
 #define STATE_SAVE_PERIOD UINT32_C(360 * 60 * 1000) /* 360 minutes - 4 times a day */
@@ -90,6 +108,7 @@ const String gasName[] = { "Field Air", "Hand sanitizer", "Undefined 3", "Undefi
 /* Entry point for the example */
 void setup(void)
 {
+#if (OUTPUT_MODE == CLASSIFICATION)
   /* Desired subscription list of BSEC2 outputs */
     bsecSensor sensorList[] = {
             BSEC_OUTPUT_RAW_TEMPERATURE,
@@ -102,6 +121,20 @@ void setup(void)
             BSEC_OUTPUT_GAS_ESTIMATE_3,
             BSEC_OUTPUT_GAS_ESTIMATE_4
     };
+#elif (OUTPUT_MODE == REGRESSION)
+	/* Desired subscription list of BSEC2 outputs */
+    bsecSensor sensorList[] = {
+            BSEC_OUTPUT_RAW_TEMPERATURE,
+            BSEC_OUTPUT_RAW_PRESSURE,
+            BSEC_OUTPUT_RAW_HUMIDITY,
+            BSEC_OUTPUT_RAW_GAS,
+            BSEC_OUTPUT_RAW_GAS_INDEX,
+            BSEC_OUTPUT_REGRESSION_ESTIMATE_1,
+            BSEC_OUTPUT_REGRESSION_ESTIMATE_2,
+            BSEC_OUTPUT_REGRESSION_ESTIMATE_3,
+            BSEC_OUTPUT_REGRESSION_ESTIMATE_4
+    };	
+#endif
 
     Serial.begin(115200);
   #ifdef USE_EEPROM
@@ -120,7 +153,7 @@ void setup(void)
     }
 
     /* Load the configuration string that stores information on how to classify the detected gas */
-    if (!envSensor.setConfig(FieldAir_HandSanitizer_config))
+	if (!envSensor.setConfig(bsec_config))
     {
         checkBsecStatus (envSensor);
     }
@@ -192,6 +225,8 @@ void newDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bse
         return;
 
     Serial.println("BSEC outputs:\n\ttimestamp = " + String((int) (outputs.output[0].time_stamp / INT64_C(1000000))));
+    uint8_t index = 0;
+	
     for (uint8_t i = 0; i < outputs.nOutputs; i++)
     {
         const bsecData output  = outputs.output[i];
@@ -222,12 +257,23 @@ void newDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bse
             case BSEC_OUTPUT_GAS_ESTIMATE_2:
             case BSEC_OUTPUT_GAS_ESTIMATE_3:
             case BSEC_OUTPUT_GAS_ESTIMATE_4:
-                if((int)(output.signal * 10000.0f) > 0) /* Ensure that there is a valid value xx.xx% */
+                index = (output.sensor_id - BSEC_OUTPUT_GAS_ESTIMATE_1);
+                if (index == 0) // The four classes are updated from BSEC with same accuracy, thus printing is done just once.
                 {
-                    Serial.println("\t" + \
-                      gasName[(int) (output.sensor_id - BSEC_OUTPUT_GAS_ESTIMATE_1)] + \
-                      String(" probability : ") + String(output.signal * 100) + "%");
+                  Serial.println("\taccuracy = " + String(output.accuracy));
                 }
+                Serial.println("\tclass " + String(index + 1) + " probability : " + String(output.signal * 100) + "%");
+                break;
+            case BSEC_OUTPUT_REGRESSION_ESTIMATE_1:
+            case BSEC_OUTPUT_REGRESSION_ESTIMATE_2:
+            case BSEC_OUTPUT_REGRESSION_ESTIMATE_3:
+            case BSEC_OUTPUT_REGRESSION_ESTIMATE_4:
+                index = (output.sensor_id - BSEC_OUTPUT_REGRESSION_ESTIMATE_1);
+                if (index == 0) // The four targets are updated from BSEC with same accuracy, thus printing is done just once.
+                {
+                  Serial.println("\taccuracy = " + String(output.accuracy));
+                }
+                Serial.println("\ttarget " + String(index + 1) + " : " + String(output.signal * 100));
                 break;
             default:
                 break;

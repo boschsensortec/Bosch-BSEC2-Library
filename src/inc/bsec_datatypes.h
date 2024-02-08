@@ -85,7 +85,7 @@ extern "C"
 
 #define BSEC_MAX_WORKBUFFER_SIZE     (4096)    /*!< Maximum size (in bytes) of the work buffer */
 #define BSEC_MAX_PHYSICAL_SENSOR     (8)         /*!< Number of physical sensors that need allocated space before calling bsec_update_subscription() */
-#define BSEC_MAX_PROPERTY_BLOB_SIZE  (1974)     /*!< Maximum size (in bytes) of the data blobs returned by bsec_get_configuration() */
+#define BSEC_MAX_PROPERTY_BLOB_SIZE  (2063)     /*!< Maximum size (in bytes) of the data blobs returned by bsec_get_configuration() */
 #define BSEC_MAX_STATE_BLOB_SIZE     (221)        /*!< Maximum size (in bytes) of the data blobs returned by bsec_get_state()*/
 #define BSEC_SAMPLE_RATE_DISABLED    (65535.0f)      /*!< Sample rate of a disabled sensor */
 #define BSEC_SAMPLE_RATE_ULP         (0.0033333f)           /*!< Sample rate in case of Ultra Low Power Mode */
@@ -98,8 +98,9 @@ extern "C"
 #define BSEC_PROCESS_TEMPERATURE    (1 << (BSEC_INPUT_TEMPERATURE-1))/*!< process_data bitfield constant for temperature @sa bsec_bme_settings_t */
 #define BSEC_PROCESS_HUMIDITY       (1 << (BSEC_INPUT_HUMIDITY-1))  /*!< process_data bitfield constant for humidity @sa bsec_bme_settings_t */
 #define BSEC_PROCESS_GAS            (1 << (BSEC_INPUT_GASRESISTOR-1)) /*!< process_data bitfield constant for gas sensor @sa bsec_bme_settings_t */
-#define BSEC_NUMBER_OUTPUTS         (19)         /*!< Number of outputs, depending on solution */
-#define BSEC_OUTPUT_INCLUDED        (66222575)             /*!< bitfield that indicates which outputs are included in the solution */
+#define BSEC_PROCESS_PROFILE_PART	(1 << (BSEC_INPUT_PROFILE_PART-1)) /*!< process_data bitfield constant for gas sensor @sa bsec_bme_settings_t */
+#define BSEC_NUMBER_OUTPUTS         (23)         /*!< Number of outputs, depending on solution */
+#define BSEC_OUTPUT_INCLUDED        (1072855535)             /*!< bitfield that indicates which outputs are included in the solution */
 
 /*!
  * @brief Enumeration for input (physical) sensors.
@@ -296,7 +297,18 @@ typedef enum
 	BSEC_OUTPUT_GAS_ESTIMATE_3 = 24,                        /*!< Gas estimate output channel 3 [0-1] */
 	BSEC_OUTPUT_GAS_ESTIMATE_4 = 25,                        /*!< Gas estimate output channel 4 [0-1] */
 
-    BSEC_OUTPUT_RAW_GAS_INDEX = 26      /*!< Gas index cyclically running from 0 to heater_profile_length-1, range of heater profile length is from 1 to 10, default being 10 */      
+    BSEC_OUTPUT_RAW_GAS_INDEX = 26,      /*!< Gas index cyclically running from 0 to heater_profile_length-1, range of heater profile length is from 1 to 10, default being 10 */      
+	
+	/**
+     * @brief Regression estimate output channel 1 
+     * 
+     * The regression estimate gives the quantitative measurement of the gases used.  
+     * In standard scan mode, quantification of the gas is provided by the variables BSEC_OUTPUT_REGRESSION_ESTIMATE_1. A maximum of 4 gas targets can be used by configuring using BME AI-studio.
+     */
+	BSEC_OUTPUT_REGRESSION_ESTIMATE_1 = 27,                        
+	BSEC_OUTPUT_REGRESSION_ESTIMATE_2 = 28,                  /*!< Regression estimate output channel 2  */
+	BSEC_OUTPUT_REGRESSION_ESTIMATE_3 = 29,                  /*!< Regression estimate output channel 3  */
+	BSEC_OUTPUT_REGRESSION_ESTIMATE_4 = 30                   /*!< Regression estimate output channel 4  */
 } bsec_virtual_sensor_t;
 
 /*!
@@ -324,10 +336,11 @@ typedef enum
     BSEC_W_SU_MODINNOULP = 11,                      /*!< ULP plus can not be requested in non-ulp mode */ /*MOD_ONLY*/
     BSEC_I_SU_SUBSCRIBEDOUTPUTGATES = 12,           /*!< No output (virtual) sensor data were requested via bsec_update_subscription() */
     BSEC_I_SU_GASESTIMATEPRECEDENCE = 13,                /*!< GAS_ESTIMATE is suscribed and take precedence over other requested outputs */
+    BSEC_W_SU_SAMPLERATEMISMATCH = 14,              /*!< Subscriped sample rate of the output is not matching with configured sample rate. For example if user used the configuration of ULP and outputs subscribed for LP mode this warning will inform the user about this mismatch*/
     BSEC_E_PARSE_SECTIONEXCEEDSWORKBUFFER = -32,    /*!< n_work_buffer_size passed to bsec_set_[configuration/state]() not sufficient */
     BSEC_E_CONFIG_FAIL = -33,                       /*!< Configuration failed */
     BSEC_E_CONFIG_VERSIONMISMATCH = -34,            /*!< Version encoded in serialized_[settings/state] passed to bsec_set_[configuration/state]() does not match with current version */
-    BSEC_E_CONFIG_FEATUREMISMATCH = -35,            /*!< Enabled features encoded in serialized_[settings/state] passed to bsec_set_[configuration/state]() does not match with current library implementation */
+    BSEC_E_CONFIG_FEATUREMISMATCH = -35,            /*!< Enabled features encoded in serialized_[settings/state] passed to bsec_set_[configuration/state]() does not match with current library implementation or subscribed outputs*/
     BSEC_E_CONFIG_CRCMISMATCH = -36,                /*!< serialized_[settings/state] passed to bsec_set_[configuration/state]() is corrupted */
     BSEC_E_CONFIG_EMPTY = -37,                      /*!< n_serialized_[settings/state] passed to bsec_set_[configuration/state]() is to short to be valid */
     BSEC_E_CONFIG_INSUFFICIENTWORKBUFFER = -38,     /*!< Provided work_buffer is not large enough to hold the desired string */
@@ -407,9 +420,9 @@ typedef struct
      * | Name                       | Value |  Accuracy description                                                                                       |
      * |----------------------------|-------|-------------------------------------------------------------------------------------------------------------|
      * | UNRELIABLE                 |   0   | Sensor data is unreliable, the sensor must be calibrated                                                    |
-     * | LOW_ACCURACY               |   1   | Low accuracy, sensor should be calibrated                                                                   |
-     * | MEDIUM_ACCURACY            |   2   | Medium accuracy, sensor calibration may improve performance                                                 |
-     * | HIGH_ACCURACY              |   3   | High accuracy                                                                                               |
+     * | LOW_ACCURACY               |   1   | Reliability of virtual sensor is low, sensor should be calibrated                                                                   |
+     * | MEDIUM_ACCURACY            |   2   | Medium reliability, sensor calibration or training may improve performance                                              |
+     * | HIGH_ACCURACY              |   3   | High reliability                                                      |
      *
      * For example:
      * 
@@ -429,9 +442,18 @@ typedef struct
      *   | Virtual sensor             | Value |  Accuracy description                                                                                                                                         |
      *   |----------------------------|-------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
      *   | GAS_ESTIMATE_x*            |   0   | No valid gas estimate found - BSEC collecting gas features                                                                                                    |                           
-     *   |                            |   3   | Valid gas estimate found - BSEC gas estimation prediction available                                                                                           |
+     *   |                            |   3   | Gas estimate prediction available                                                                                           |
      *
      *   <sup>*</sup> GAS_ESTIMATE_1, GAS_ESTIMATE_2, GAS_ESTIMATE_3, GAS_ESTIMATE_4
+	 * - Regression estimate accuracy  will notify the user when she/he gets valid regression estimate output. 
+     * 
+     *   | Virtual sensor             | Value |  Accuracy description                                                                                                                                         |
+     *   |----------------------------|-------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
+     *   | REGRESSION_ESTIMATE_x*            |   0   | No valid regression estimate output found - BSEC collecting gas features                                                                                                    |   
+     *   |                            |   2   | Predicted regression estimate output is not within the value of the label present in the training data |	 
+     *   |                            |   3   | Predicted regression estimate output is within the the value of the label present in the training data                                                          |
+     *
+     *   <sup>*</sup> REGRESSION_ESTIMATE_1, REGRESSION_ESTIMATE_2, REGRESSION_ESTIMATE_3, REGRESSION_ESTIMATE_4
      */     
     uint8_t accuracy;           
 } bsec_output_t;

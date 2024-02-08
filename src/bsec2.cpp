@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	bsec2.cpp
- * @date	17 January 2023
- * @version	2.0.6
+ * @date	04 Dec 2023
+ * @version	2.1.4
  *
  */
 
@@ -173,6 +173,9 @@ bool Bsec2::run(void)
                     /* check for valid gas data */
                     if (data.status & BME68X_GASM_VALID_MSK)
                     {
+						/* Convert sensor raw pressure unit from pascal to hecto pascal */
+						data.pressure *= 0.01f;
+
                         if (!processData(currTimeNs, data))
                         {
                             return false;

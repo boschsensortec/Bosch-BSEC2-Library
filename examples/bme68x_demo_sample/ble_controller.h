@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	ble_controller.h
- * @date	    11 April 2023
- * @version		2.0.9
+ * @date	    04 Dec 2023
+ * @version		2.1.4
  * 
  * @brief	Header file for the ble controller
  * 
@@ -60,13 +60,13 @@
 #define SERVICE_UUID           		"6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
 #define CHARACTERISTIC_UUID_RX 		"6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
 #define CHARACTERISTIC_UUID_TX 		"6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
-#define BLE_MSG_QUEUE_LEN			3
-#define BLE_JSON_DOC_SIZE			2048
-#define BLE_CONTROLLER_NOTIF_SIZE	600
-#define BLE_MAX_MTU_SIZE			512
+#define BLE_MSG_QUEUE_LEN			UINT8_C(3)
+#define BLE_JSON_DOC_SIZE			UINT16_C(2048)
+#define BLE_CONTROLLER_NOTIF_SIZE	UINT16_C(600)
+#define BLE_MAX_MTU_SIZE			UINT16_C(512)
 
-static bool deviceConnected = false;
-static bool oldDeviceConnected = false;
+static bool device_connected = false;
+static bool old_device_connected = false;
 
 /*!
  * @brief Class library for the ble controller
@@ -77,7 +77,7 @@ public:
 	/*!
 	 * @brief ble communication status
 	 */
-	enum cmdStatus
+	enum cmd_status
 	{
 		CMD_VALID,
 		CMD_INVALID,
@@ -105,13 +105,14 @@ public:
 		MAX_LABEL_DESCRIPTION_REACHED,
 		FILE_OPEN_ERROR,
 		DESERIALIZATION_FAILED,
-		LABEL_NOT_FOUND
+		LABEL_NOT_FOUND,
+		AI_CONFIG_AND_SUBSCRIPTION_MISSMATCH
 	};
 	
 	/*!
 	 * @brief bsec sample rate enumeration
 	 */
-	enum bsecSampleRate
+	enum bsec_sample_rate
 	{
 		ULP,
 		LP,
@@ -121,7 +122,7 @@ public:
 	/*!
 	 * @brief config file type enumeration
 	 */
-	enum configFile
+	enum config_file
 	{
 		BMECONFIG,
 		AICONFIG
@@ -130,7 +131,7 @@ public:
 	/*!
 	 * @brief bluetooth message id enumeration
 	 */
-	enum bleMsgId
+	enum ble_msg_id
 	{
 		GET_LABEL_INFO,
 		SET_LABEL_INFO,
@@ -149,69 +150,69 @@ public:
 	/*!
 	 * @brief bluetooth bsec message
 	 */
-	struct bleBsecMsg
+	struct ble_bsec_msg
 	{
-		uint8_t	 	selectedSensor;
-		uint8_t		sampleRate;
+		uint8_t	 	selected_sensor;
+		uint8_t		sample_rate;
 		uint8_t		len;
-		uint8_t	 	outputId[BSEC_NUMBER_OUTPUTS];
+		uint8_t	 	output_id[BSEC_NUMBER_OUTPUTS];
 	};
 	
 	/*!
 	 * @brief label information
 	 */
-	struct bleLabelInfo
+	struct ble_label_info
 	{
 		uint32_t	 	label;
-		char labelName[LABEL_NAME_SIZE + 1];
-		char labelDesc[LABEL_DESC_SIZE + 1];
+		char label_name[LABEL_NAME_SIZE + 1];
+		char label_desc[LABEL_DESC_SIZE + 1];
 	};
 	
 	
 	/*!
 	 * @brief bluetooth message structure
 	 */
-	struct bleMsg
+	struct ble_msg
 	{
 		const char *name;
-		bleMsgId id;
+		ble_msg_id id;
 		union
 		{
-			bleBsecMsg		bsec;
+			ble_bsec_msg	bsec;
 			uint32_t	 	label;
-			uint32_t		rtcTime;
-			configFile		fileType;
+			uint32_t		rtc_time;
+			config_file		file_type;
 			uint8_t			mode;
-			bleLabelInfo    labelInfo;
-			uint32_t		groundTruth;
+			ble_label_info 	label_info;
+			uint32_t		ground_truth;
 		};
 	};
 	
 	/*!
 	 * @brief bluetooth command structure
 	 */
-	struct bleCmd
+	struct ble_cmd
 	{
 		const char *name;
-		cmdStatus (*parse)(std::stringstream& ss, bleMsg& msg);
-		bleMsgId id;
+		cmd_status (*parse)(std::stringstream& ss, ble_msg& msg);
+		ble_msg_id id;
 	};
 	
-	typedef void (*bleCallBack)(const bleMsg &msg, JsonDocument& jsonDoc);
+	typedef void (*bleCallBack)(const ble_msg &msg, JsonDocument& jsonDoc);
 	
     /*!
      * @brief : The constructor of the bleController class creates an instance of the class
 	 * 
 	 * @param[in] callBack : ble callBack called when a message is dequeued.
      */
-    bleController(bleCallBack callBack);
+	bleController(bleCallBack callBack);
 	
 	/*!
 	 * @brief :  This function initializes the ble controller.
      * 
      * @return bosch error code
 	 */
-    demoRetCode begin();
+	demo_ret_code begin();
 	
 	/*!
 	 * @brief : This function dequeues the last received ble message. The ble callBack
@@ -219,14 +220,14 @@ public:
      * 
      * @return true if a new message is available else false
 	 */
-    bool dequeueBleMsg(void);
+	bool dequeue_ble_msg(void);
 	
 	/*!
 	 * @brief :  This function send a json formatted notification.
 	 *
 	 * @param[out] jsonDoc : json formatted message
 	 */
-    void sendNotification(JsonDocument& jsonDoc);
+	void send_notification(JsonDocument& jsonDoc);
 	
 	/*!
 	 * @brief :  This function gets called when data is received from a bluetooth device.
@@ -237,89 +238,89 @@ public:
 	/*!
 	 * @brief : This function checks the ble connection status, restarts advertising if disconnected
 	 */
-	void checkBleConnectionSts();
+	void check_ble_connection_sts();
 	
 private:
 	bleCallBack						_callBack;
 	
-	static QueueHandle_t 			msgQueue;
-	static bleCmd					cmdList[];
-	static BLECharacteristic		*bleCharTx, *bleCharRx;
-	static BLEServer 				*pServer;
+	static QueueHandle_t 			msg_queue;
+	static ble_cmd					    cmd_list[];
+	static BLECharacteristic	*ble_char_tx, *ble_char_rx;
+	static BLEServer 				  *pServer;
 
 	/*!
 	 * @brief : This function fetches the RTC time which is requested through ble command
 	 */
-	static cmdStatus parseCmdGetRtcTime(std::stringstream& ss, bleMsg& msg);
+	static cmd_status parse_cmd_get_rtc_time(std::stringstream& ss, ble_msg& msg);
 
 	/*!
 	 * @brief : This function parses the RTC time received from the ble device and updates 
 	 *        	the RTC time to the ble structure
 	 */
-	static cmdStatus parseCmdSetRtcTime(std::stringstream& ss, bleMsg& msg);
+	static cmd_status parse_cmd_set_rtc_time(std::stringstream& ss, ble_msg& msg);
 
 	/*!
 	 * @brief : This function fetches the current label information from the .bmelabelinfo file
 	 */
-	static cmdStatus parseCmdGetLabelInfo(std::stringstream& ss, bleMsg& msg);
+	static cmd_status parse_cmd_get_label_info(std::stringstream& ss, ble_msg& msg);
 
 	/*!
 	 * @brief : This function updates the received label information to the ble structure
 	 */
-	static cmdStatus parseCmdSetLabelInfo(std::stringstream& ss, bleMsg& msg);
+	static cmd_status parse_cmd_set_label_info(std::stringstream& ss, ble_msg& msg);
 
 	/*!
 	 * @brief : This function updates the received label to the ble structure
 	 */
-	static cmdStatus parseCmdSetLabel(std::stringstream& ss, bleMsg& msg);
+	static cmd_status parse_cmd_set_label(std::stringstream& ss, ble_msg& msg);
 	
 	/*!
 	 * @brief : This function launches sensor data or sensor data and BSEC output streaming through ble
 	 *			based on the app mode
 	 */
-	static cmdStatus parseCmdStartStreaming(std::stringstream& ss, bleMsg& msg);
+	static cmd_status parse_cmd_start_streaming(std::stringstream& ss, ble_msg& msg);
 	
 	/*!
 	 * @brief : This function stops ble streaming
 	 */
-	static cmdStatus parseCmdStopStreaming(std::stringstream& ss, bleMsg& msg);
+	static cmd_status parse_cmd_stop_streaming(std::stringstream& ss, ble_msg& msg);
 	
 	/*!
 	 * @brief : This function launches the config file data through ble
 	 */
-	static cmdStatus parseCmdReadConfig(std::stringstream& ss, bleMsg& msg);
+	static cmd_status parse_cmd_read_config(std::stringstream& ss, ble_msg& msg);
 
 	/*!
 	 * @brief : This function updates the current Appmode
 	 */
-	static cmdStatus parseCmdSetAppmode(std::stringstream& ss, bleMsg& msg);
+	static cmd_status parse_cmd_set_appmode(std::stringstream& ss, ble_msg& msg);
 
 	/*!
 	 * @brief : This function retrieves the current Appmode through ble
 	 */
-	static cmdStatus parseCmdGetAppmode(std::stringstream& ss, bleMsg& msg);
+	static cmd_status parse_cmd_get_appmode(std::stringstream& ss, ble_msg& msg);
 
 	/*!
 	 * @brief : This function updates the Groundtruth through ble
 	 */
-	static cmdStatus parseCmdSetGroundtruth(std::stringstream& ss, bleMsg& msg);
+	static cmd_status parse_cmd_set_groundtruth(std::stringstream& ss, ble_msg& msg);
 
 	/*!
 	 * @brief : This function retrieves the current firmware version through ble
 	 */
-	static cmdStatus parseCmdGetFwVersion(std::stringstream& ss, bleMsg& msg);
+	static cmd_status parse_cmd_get_fw_version(std::stringstream& ss, ble_msg& msg);
 };
 
 class serverCallbacks: public BLEServerCallbacks
 {
 	void onConnect(BLEServer* pServer)
 	{
-		deviceConnected = true;
+		device_connected = true;
 	}
 
 	void onDisconnect(BLEServer* pServer)
 	{
-		deviceConnected = false;
+		device_connected = false;
 	}
 };
 
