@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	    bsec_datalogger.cpp
- * @date		11 April 2023
- * @version		2.0.9
+ * @date		04 Dec 2023
+ * @version		2.1.4
  * 
  * @brief    	bsec_datalogger
  *
@@ -46,77 +46,84 @@
 
 StaticJsonDocument<80> 		filter1;
 StaticJsonDocument<1024> 	doc;
-StaticJsonDocument<32> 		filter2;
-StaticJsonDocument<512> 	labelDoc;
+StaticJsonDocument<70> 		filter2;
+StaticJsonDocument<512> 	label_doc;
 StaticJsonDocument<2048> 	config;
 
 /*!
  * @brief The constructor of the bsec_datalogger class 
  */
-bsecDataLogger::bsecDataLogger() : _bsecFileCounter(1)
+bsecDataLogger::bsecDataLogger() : _bsec_file_counter(1)
 {}
 
 /*!
  * @brief This function configures the bsec datalogger using the provided bsec config string file
  */
-demoRetCode bsecDataLogger::begin(const String& configName, const bsec_version_t& bsecVersion, uint8_t sensorNum)
+demo_ret_code bsecDataLogger::begin(const String& config_name, const bsec_version_t& bsec_version, uint8_t sensor_num)
 {
-	demoRetCode retCode = utils::begin();
+	demo_ret_code ret_code = utils::begin();
 	
-	_aiConfigName = configName;
-	_version = bsecVersion;
-	if (retCode >= EDK_OK)
+	_ai_config_name = config_name;
+	_version = bsec_version;
+
+	if (ret_code >= EDK_OK)
 	{
-		retCode = createBsecFile();
-		if (retCode >= EDK_OK)
+		ret_code = create_bsec_file();
+
+		if (ret_code >= EDK_OK)
 		{
-			retCode = createRawDataFile(sensorNum);
-			if (retCode >= EDK_OK)
+			ret_code = create_raw_data_file(sensor_num);
+
+			if (ret_code >= EDK_OK)
 			{
-				retCode = createLabelInfoFile();
+				ret_code = create_label_info_file();
 			}
 		}
 	}
-	return retCode;
+	return ret_code;
 }
  
 /*!
  * @brief This function creates a bsec output file
  */
-demoRetCode bsecDataLogger::createBsecFile()
+demo_ret_code bsecDataLogger::create_bsec_file()
 {
-	demoRetCode retCode = EDK_OK;
-	String macStr = utils::getMacAddress();	
-    String aiFileBaseName = "_Board_" + macStr + "_PowerOnOff_1_";
+	demo_ret_code ret_code = EDK_OK;
+	String mac_str = utils::get_mac_address();	
+	String ai_file_base_name = "_Board_" + mac_str + "_PowerOnOff_1_";
 	
-    _aiFileName = utils::getDateTime() + aiFileBaseName + utils::getFileSeed() + "_File_" + 
-														String(_bsecFileCounter) + AI_DATA_FILE_EXT;
+	_ai_file_name = utils::get_date_time() + ai_file_base_name + utils::get_file_seed() + "_File_" + 
+														String(_bsec_file_counter) + AI_DATA_FILE_EXT;
 	
 	File configFile, logFile;
-	if (_aiConfigName.length() && !configFile.open(_aiConfigName.c_str(), O_RDWR))
+
+	if (_ai_config_name.length() && !configFile.open(_ai_config_name.c_str(), O_RDWR))
 	{
-		retCode = EDK_DATALOGGER_AI_CONFIG_FILE_ERROR;
+		ret_code = EDK_DATALOGGER_AI_CONFIG_FILE_ERROR;
 	}
-	else if (!logFile.open(_aiFileName.c_str(), O_RDWR | O_CREAT))
+	else if (!logFile.open(_ai_file_name.c_str(), O_RDWR | O_CREAT))
 	{
-		retCode = EDK_DATALOGGER_LOG_FILE_ERROR;
+		ret_code = EDK_DATALOGGER_LOG_FILE_ERROR;
 	}
 	else 
 	{
-		if (_aiConfigName.length())
+
+		if (_ai_config_name.length())
 		{
-			String lineBuffer;
+			String line_buffer;
+
 			/* read in each line from the config file and copy it to the log file */
-			while(configFile.available())
+			while (configFile.available())
 			{
-				lineBuffer = configFile.readStringUntil('\n');
+				line_buffer = configFile.readStringUntil('\n');
+
 				/* skip the last closing curly bracket of the JSON document */
-				if (lineBuffer == "}")
+				if (line_buffer == "}")
 				{
 					logFile.println("\t,");
 					break;
 				}
-				logFile.println(lineBuffer);
+				logFile.println(line_buffer);
 			}
 			configFile.close();
 		}
@@ -126,14 +133,14 @@ demoRetCode bsecDataLogger::createBsecFile()
 		}
 		logFile.println("\t\"aiPredictionsDataHeader\": {");
 		logFile.println("\t\t\"counterPowerOnOff\": 1,");
-		logFile.println("\t\t\"seedPowerOnOff\": \"" + utils::getFileSeed() + "\",");
-		logFile.println("\t\t\"counterFileLimit\": " + String(_bsecFileCounter) + ",");
-		logFile.println("\t\t\"dateCreated\": \"" + String(utils::getRtc().now().unixtime()) + "\",");
-		logFile.println("\t\t\"dateCreated_ISO\": \"" + utils::getRtc().now().timestamp() + "+00:00\",");
+		logFile.println("\t\t\"seedPowerOnOff\": \"" + utils::get_file_seed() + "\",");
+		logFile.println("\t\t\"counterFileLimit\": " + String(_bsec_file_counter) + ",");
+		logFile.println("\t\t\"dateCreated\": \"" + String(utils::get_rtc().now().unixtime()) + "\",");
+		logFile.println("\t\t\"dateCreated_ISO\": \"" + utils::get_rtc().now().timestamp() + "+00:00\",");
 		logFile.println("\t\t\"firmwareVersion\": \"" + String(FIRMWARE_VERSION) + "\",");
 		logFile.println("\t\t\"bsecVersion\": \"" + String(_version.major) + "." + String(_version.minor) + \
 							 "." + String(_version.major_bugfix) + "." + String(_version.minor_bugfix) + "\",");
-		logFile.println("\t\t\"boardId\": \"" + macStr + "\"");
+		logFile.println("\t\t\"boardId\": \"" + mac_str + "\"");
 		logFile.println("\t},");
 		logFile.println("\t\"aiPredictionsDataBody\": {");
 		logFile.println("\t\t\"dataColumns\": [");
@@ -166,38 +173,38 @@ demoRetCode bsecDataLogger::createBsecFile()
 		logFile.println("\t\t\t\t\"colId\": 4");
 		logFile.println("\t\t\t},");
 		logFile.println("\t\t\t{");
-		logFile.println("\t\t\t\t\"name\": \"Class 1 prediction\",");
+		logFile.println("\t\t\t\t\"name\": \"Class/Target 1 prediction\",");
 		logFile.println("\t\t\t\t\"unit\": \"\",");
 		logFile.println("\t\t\t\t\"format\": \"float\",");
-		logFile.println("\t\t\t\t\"key\": \"class_1_prediction\",");
+		logFile.println("\t\t\t\t\"key\": \"classtarget_1_prediction\",");
 		logFile.println("\t\t\t\t\"colId\": 5");
 		logFile.println("\t\t\t},");
 		logFile.println("\t\t\t{");
-		logFile.println("\t\t\t\t\"name\": \"Class 2 prediction\",");
+		logFile.println("\t\t\t\t\"name\": \"Class/Target 2 prediction\",");
 		logFile.println("\t\t\t\t\"unit\": \"\",");
 		logFile.println("\t\t\t\t\"format\": \"float\",");
-		logFile.println("\t\t\t\t\"key\": \"class_2_prediction\",");
+		logFile.println("\t\t\t\t\"key\": \"classtarget_2_prediction\",");
 		logFile.println("\t\t\t\t\"colId\": 6");
 		logFile.println("\t\t\t},");
 		logFile.println("\t\t\t{");
-		logFile.println("\t\t\t\t\"name\": \"Class 3 prediction\",");
+		logFile.println("\t\t\t\t\"name\": \"Class/Target 3 prediction\",");
 		logFile.println("\t\t\t\t\"unit\": \"\",");
 		logFile.println("\t\t\t\t\"format\": \"float\",");
-		logFile.println("\t\t\t\t\"key\": \"class_3_prediction\",");
+		logFile.println("\t\t\t\t\"key\": \"classtarget_3_prediction\",");
 		logFile.println("\t\t\t\t\"colId\": 7");
 		logFile.println("\t\t\t},");
 		logFile.println("\t\t\t{");
-		logFile.println("\t\t\t\t\"name\": \"Class 4 prediction\",");
+		logFile.println("\t\t\t\t\"name\": \"Class/Target 4 prediction\",");
 		logFile.println("\t\t\t\t\"unit\": \"\",");
 		logFile.println("\t\t\t\t\"format\": \"float\",");
-		logFile.println("\t\t\t\t\"key\": \"class_4_prediction\",");
+		logFile.println("\t\t\t\t\"key\": \"classtarget_4_prediction\",");
 		logFile.println("\t\t\t\t\"colId\": 8");
 		logFile.println("\t\t\t},");
 		logFile.println("\t\t\t{");
-		logFile.println("\t\t\t\t\"name\": \"Class prediction accuracy\",");
+		logFile.println("\t\t\t\t\"name\": \"Prediction accuracy\",");
 		logFile.println("\t\t\t\t\"unit\": \"\",");
 		logFile.println("\t\t\t\t\"format\": \"integer\",");
-		logFile.println("\t\t\t\t\"key\": \"class_prediction_accuracy\",");
+		logFile.println("\t\t\t\t\"key\": \"prediction_accuracy\",");
 		logFile.println("\t\t\t\t\"colId\": 9");
 		logFile.println("\t\t\t},");
 		logFile.println("\t\t\t{");
@@ -233,7 +240,7 @@ demoRetCode bsecDataLogger::createBsecFile()
 		/* data block */
 		logFile.println("\t\t\"dataBlock\": [");
 		/* save position in file, where to write the first data set */
-		_aiDataPos = logFile.position();
+		_ai_data_pos = logFile.position();
 		logFile.println("\t\t]");
 		logFile.println("\t}");
 		logFile.println("}");
@@ -241,48 +248,50 @@ demoRetCode bsecDataLogger::createBsecFile()
 		/* close log file */
 		logFile.close();
 		
-		_firstLine = true;
+		_first_line = true;
 	}
-    return retCode;
+	return ret_code;
 }
 
 /*!
  * @brief This function creates a bme68x datalogger output file
  */
-demoRetCode bsecDataLogger::createRawDataFile(uint8_t sensorNum)
+demo_ret_code bsecDataLogger::create_raw_data_file(uint8_t sensor_num)
 {
-	demoRetCode retCode = EDK_OK;
-	String macStr = utils::getMacAddress();	
-    String bmeFileBaseName = "_Board_" + macStr + "_PowerOnOff_1_";
+	demo_ret_code ret_code = EDK_OK;
+	String mac_str = utils::get_mac_address();	
+	String bme_file_base_name = "_Board_" + mac_str + "_PowerOnOff_1_";
 	
-    _bmeFileName = utils::getDateTime() + bmeFileBaseName + utils::getFileSeed() + "_File_" + 
-														String(_bsecFileCounter) + BME68X_RAWDATA_FILE_EXT;
+	_bme_file_name = utils::get_date_time() + bme_file_base_name + utils::get_file_seed() + "_File_" + 
+														String(_bsec_file_counter) + BME68X_RAWDATA_FILE_EXT;
 	
 	File logFile;
-	if (!logFile.open(_bmeFileName.c_str(), O_RDWR | O_CREAT))
+
+	if (!logFile.open(_bme_file_name.c_str(), O_RDWR | O_CREAT))
 	{
-		retCode = EDK_DATALOGGER_LOG_FILE_ERROR;
+		ret_code = EDK_DATALOGGER_LOG_FILE_ERROR;
 	}
 	else 
 	{
-		retCode = prepareConfigContent(sensorNum);
-		if (retCode != EDK_OK)
+		ret_code = prepare_config_content(sensor_num);
+
+		if (ret_code != EDK_OK)
 		{
-			return retCode;
+			return ret_code;
 		}
 
 		/* Writes the config header and body to the logfile */
-		logFile.print(configString);
+		logFile.print(config_string);
 		/* write data header / skeleton */
 		/* raw data header */
 		logFile.println("\t,\n\t\"rawDataHeader\": {");
 		logFile.println("\t\t\"counterPowerOnOff\": 1,");
-		logFile.println("\t\t\"seedPowerOnOff\": \"" + utils::getFileSeed() + "\",");
-		logFile.println("\t\t\"counterFileLimit\": " + String(_bsecFileCounter) + ",");
-		logFile.println("\t\t\"dateCreated\": \"" + String(utils::getRtc().now().unixtime()) + "\",");
-		logFile.println("\t\t\"dateCreated_ISO\": \"" + utils::getRtc().now().timestamp() + "+00:00\",");
+		logFile.println("\t\t\"seedPowerOnOff\": \"" + utils::get_file_seed() + "\",");
+		logFile.println("\t\t\"counterFileLimit\": " + String(_bsec_file_counter) + ",");
+		logFile.println("\t\t\"dateCreated\": \"" + String(utils::get_rtc().now().unixtime()) + "\",");
+		logFile.println("\t\t\"dateCreated_ISO\": \"" + utils::get_rtc().now().timestamp() + "+00:00\",");
 		logFile.println("\t\t\"firmwareVersion\": \"" + String(FIRMWARE_VERSION) + "\",");
-		logFile.println("\t\t\"boardId\": \"" + macStr + "\"");
+		logFile.println("\t\t\"boardId\": \"" + mac_str + "\"");
 		logFile.println("\t},");
 		logFile.println("\t\"rawDataBody\": {");
 		logFile.println("\t\t\"dataColumns\": [");
@@ -382,28 +391,29 @@ demoRetCode bsecDataLogger::createRawDataFile(uint8_t sensorNum)
 		/* data block */
 		logFile.println("\t\t\"dataBlock\": [");
 		/* save position in file, where to write the first data set */
-		_bmeDataPos = logFile.position();
+		_bme_data_pos = logFile.position();
 		logFile.println("\t\t]");
 		logFile.println("\t}");
 		logFile.println("}");
 
-		_endOfLine = false;
+		_end_of_line = false;
 		/* close log file */
 		logFile.close();
 	}
-    return retCode;
+	return ret_code;
 }
 
-demoRetCode bsecDataLogger::prepareConfigContent(uint8_t sensorNum)
+demo_ret_code bsecDataLogger::prepare_config_content(uint8_t sensor_num)
 {
-	demoRetCode retCode = EDK_OK;
+	demo_ret_code ret_code = EDK_OK;
 	filter1.clear();
 	doc.clear();
 	config.clear();
-	configString = "\0";
+	config_string = "\0";
 
 	File configFile;
-	if (_aiConfigName.length() && !configFile.open(_aiConfigName.c_str(), O_RDWR))
+
+	if (_ai_config_name.length() && !configFile.open(_ai_config_name.c_str(), O_RDWR))
 	{
 		return	EDK_DATALOGGER_AI_CONFIG_FILE_ERROR;
 	}
@@ -422,53 +432,53 @@ demoRetCode bsecDataLogger::prepareConfigContent(uint8_t sensorNum)
 	}
 
 	/* parcing configuration details from aiConfig file in to local buffers */
-	const char* appVersion = doc["aiConfigHeader"]["appVersion"];
+	const char* app_version = doc["aiConfigHeader"]["appVersion"];
 
 	JsonObject heaterProfile = doc["aiConfigBody"]["heaterProfile"];
-	const char* heaterProfileId = heaterProfile["id"];
-	int heaterProfileTimeBase = heaterProfile["timeBase"];
+	const char* heater_profile_id = heaterProfile["id"];
+	int32_t heater_profile_time_base = heaterProfile["timeBase"];
 
 	JsonArray tempTimeVector = heaterProfile["temperatureTimeVectors"];
 
-	int tempTimeVector_0_0 = tempTimeVector[0][0];
-	int tempTimeVector_0_1 = tempTimeVector[0][1];
+	int32_t temp_time_vector_0_0 = tempTimeVector[0][0];
+	int32_t temp_time_vector_0_1 = tempTimeVector[0][1];
 
-	int tempTimeVector_1_0 = tempTimeVector[1][0];
-	int tempTimeVector_1_1 = tempTimeVector[1][1];
+	int32_t temp_time_vector_1_0 = tempTimeVector[1][0];
+	int32_t temp_time_vector_1_1 = tempTimeVector[1][1];
 
-	int tempTimeVector_2_0 = tempTimeVector[2][0];
-	int tempTimeVector_2_1 = tempTimeVector[2][1];
+	int32_t temp_time_vector_2_0 = tempTimeVector[2][0];
+	int32_t temp_time_vector_2_1 = tempTimeVector[2][1];
 
-	int tempTimeVector_3_0 = tempTimeVector[3][0];
-	int tempTimeVector_3_1 = tempTimeVector[3][1];
+	int32_t temp_time_vector_3_0 = tempTimeVector[3][0];
+	int32_t temp_time_vector_3_1 = tempTimeVector[3][1];
 
-	int tempTimeVector_4_0 = tempTimeVector[4][0];
-	int tempTimeVector_4_1 = tempTimeVector[4][1];
+	int32_t temp_time_vector_4_0 = tempTimeVector[4][0];
+	int32_t temp_time_vector_4_1 = tempTimeVector[4][1];
 
-	int tempTimeVector_5_0 = tempTimeVector[5][0];
-	int tempTimeVector_5_1 = tempTimeVector[5][1];
+	int32_t temp_time_vector_5_0 = tempTimeVector[5][0];
+	int32_t temp_time_vector_5_1 = tempTimeVector[5][1];
 
-	int tempTimeVector_6_0 = tempTimeVector[6][0];
-	int tempTimeVector_6_1 = tempTimeVector[6][1];
+	int32_t temp_time_vector_6_0 = tempTimeVector[6][0];
+	int32_t temp_time_vector_6_1 = tempTimeVector[6][1];
 
-	int tempTimeVector_7_0 = tempTimeVector[7][0];
-	int tempTimeVector_7_1 = tempTimeVector[7][1];
+	int32_t temp_time_vector_7_0 = tempTimeVector[7][0];
+	int32_t temp_time_vector_7_1 = tempTimeVector[7][1];
 
-	int tempTimeVector_8_0 = tempTimeVector[8][0];
-	int tempTimeVector_8_1 = tempTimeVector[8][1];
+	int32_t temp_time_vector_8_0 = tempTimeVector[8][0];
+	int32_t temp_time_vector_8_1 = tempTimeVector[8][1];
 
-	int tempTimeVector_9_0 = tempTimeVector[9][0];
-	int tempTimeVector_9_1 = tempTimeVector[9][1];
+	int32_t temp_time_vector_9_0 = tempTimeVector[9][0];
+	int32_t temp_time_vector_9_1 = tempTimeVector[9][1];
 
 	JsonObject dutyCycleProfile = doc["aiConfigBody"]["dutyCycleProfile"];
-	const char* dutyCycleProfileId = dutyCycleProfile["id"];
-	int numberScanningCycles = dutyCycleProfile["numberScanningCycles"];
-	int numberSleepingCycles = dutyCycleProfile["numberSleepingCycles"];
+	const char* duty_cycle_profile_id = dutyCycleProfile["id"];
+	int32_t number_scanning_cycles = dutyCycleProfile["numberScanningCycles"];
+	int32_t number_sleeping_cycles = dutyCycleProfile["numberSleepingCycles"];
 
 	/* creating configuration header and body */
 	JsonObject configHeader = config.createNestedObject("configHeader");
-	configHeader["dateCreated"] = utils::getRtc().now().timestamp() + "+00:00";
-	configHeader["appVersion"] = appVersion;
+	configHeader["dateCreated_ISO"] = utils::get_rtc().now().timestamp() + "+00:00";
+	configHeader["appVersion"] = app_version;
 	configHeader["boardType"] = "board_8";
 	configHeader["boardMode"] = "live_test_algorithm";
 	configHeader["boardLayout"] = "custom";
@@ -476,67 +486,68 @@ demoRetCode bsecDataLogger::prepareConfigContent(uint8_t sensorNum)
 	JsonObject configBody = config.createNestedObject("configBody");
 
 	JsonObject heaterProfiles = configBody["heaterProfiles"].createNestedObject();
-	heaterProfiles["id"] = heaterProfileId;
-	heaterProfiles["timeBase"] = heaterProfileTimeBase;
+	heaterProfiles["id"] = heater_profile_id;
+	heaterProfiles["timeBase"] = heater_profile_time_base;
 
 	JsonArray tempTimeVectors = heaterProfiles.createNestedArray("temperatureTimeVectors");
 
 	JsonArray tempTimeVectors_0 = tempTimeVectors.createNestedArray();
-	tempTimeVectors_0.add(tempTimeVector_0_0);
-	tempTimeVectors_0.add(tempTimeVector_0_1);
+	tempTimeVectors_0.add(temp_time_vector_0_0);
+	tempTimeVectors_0.add(temp_time_vector_0_1);
 
 	JsonArray tempTimeVectors_1 = tempTimeVectors.createNestedArray();
-	tempTimeVectors_1.add(tempTimeVector_1_0);
-	tempTimeVectors_1.add(tempTimeVector_1_1);
+	tempTimeVectors_1.add(temp_time_vector_1_0);
+	tempTimeVectors_1.add(temp_time_vector_1_1);
 
 	JsonArray tempTimeVectors_2 = tempTimeVectors.createNestedArray();
-	tempTimeVectors_2.add(tempTimeVector_2_0);
-	tempTimeVectors_2.add(tempTimeVector_2_1);
+	tempTimeVectors_2.add(temp_time_vector_2_0);
+	tempTimeVectors_2.add(temp_time_vector_2_1);
 
 	JsonArray tempTimeVectors_3 = tempTimeVectors.createNestedArray();
-	tempTimeVectors_3.add(tempTimeVector_3_0);
-	tempTimeVectors_3.add(tempTimeVector_3_1);
+	tempTimeVectors_3.add(temp_time_vector_3_0);
+	tempTimeVectors_3.add(temp_time_vector_3_1);
 
 	JsonArray tempTimeVectors_4 = tempTimeVectors.createNestedArray();
-	tempTimeVectors_4.add(tempTimeVector_4_0);
-	tempTimeVectors_4.add(tempTimeVector_4_1);
+	tempTimeVectors_4.add(temp_time_vector_4_0);
+	tempTimeVectors_4.add(temp_time_vector_4_1);
 
 	JsonArray tempTimeVectors_5 = tempTimeVectors.createNestedArray();
-	tempTimeVectors_5.add(tempTimeVector_5_0);
-	tempTimeVectors_5.add(tempTimeVector_5_1);
+	tempTimeVectors_5.add(temp_time_vector_5_0);
+	tempTimeVectors_5.add(temp_time_vector_5_1);
 
 	JsonArray tempTimeVectors_6 = tempTimeVectors.createNestedArray();
-	tempTimeVectors_6.add(tempTimeVector_6_0);
-	tempTimeVectors_6.add(tempTimeVector_6_1);
+	tempTimeVectors_6.add(temp_time_vector_6_0);
+	tempTimeVectors_6.add(temp_time_vector_6_1);
 
 	JsonArray tempTimeVectors_7 = tempTimeVectors.createNestedArray();
-	tempTimeVectors_7.add(tempTimeVector_7_0);
-	tempTimeVectors_7.add(tempTimeVector_7_1);
+	tempTimeVectors_7.add(temp_time_vector_7_0);
+	tempTimeVectors_7.add(temp_time_vector_7_1);
 
 	JsonArray tempTimeVectors_8 = tempTimeVectors.createNestedArray();
-	tempTimeVectors_8.add(tempTimeVector_8_0);
-	tempTimeVectors_8.add(tempTimeVector_8_1);
+	tempTimeVectors_8.add(temp_time_vector_8_0);
+	tempTimeVectors_8.add(temp_time_vector_8_1);
 
 	JsonArray tempTimeVectors_9 = tempTimeVectors.createNestedArray();
-	tempTimeVectors_9.add(tempTimeVector_9_0);
-	tempTimeVectors_9.add(tempTimeVector_9_1);
+	tempTimeVectors_9.add(temp_time_vector_9_0);
+	tempTimeVectors_9.add(temp_time_vector_9_1);
 
 	JsonArray configBody_dutyCycleProfiles = configBody.createNestedArray("dutyCycleProfiles");
 
 	JsonObject dutyCycleProfiles = configBody_dutyCycleProfiles.createNestedObject();
-	dutyCycleProfiles["id"] = dutyCycleProfileId;
-	dutyCycleProfiles["numberScanningCycles"] = numberScanningCycles;
-	dutyCycleProfiles["numberSleepingCycles"] = numberSleepingCycles;
+	dutyCycleProfiles["id"] = duty_cycle_profile_id;
+	dutyCycleProfiles["numberScanningCycles"] = number_scanning_cycles;
+	dutyCycleProfiles["numberSleepingCycles"] = number_sleeping_cycles;
 
 	JsonArray sensorConfigurations = configBody.createNestedArray("sensorConfigurations");
 
 	JsonObject sensorConfiguration_0 = sensorConfigurations.createNestedObject();
 	sensorConfiguration_0["sensorIndex"] = 0;
-	if ( (sensorConfiguration_0["sensorIndex"] == sensorNum) || (sensorNum == NUM_OF_SENS) )
+
+	if ( (sensorConfiguration_0["sensorIndex"] == sensor_num) || (sensor_num == NUM_OF_SENS) )
 	{
 		sensorConfiguration_0["active"] = true;
-		sensorConfiguration_0["heaterProfile"] = heaterProfileId;
-		sensorConfiguration_0["dutyCycleProfile"] = dutyCycleProfileId;
+		sensorConfiguration_0["heaterProfile"] = heater_profile_id;
+		sensorConfiguration_0["dutyCycleProfile"] = duty_cycle_profile_id;
 	}
 	else
 	{
@@ -547,11 +558,12 @@ demoRetCode bsecDataLogger::prepareConfigContent(uint8_t sensorNum)
 
 	JsonObject sensorConfiguration_1 = sensorConfigurations.createNestedObject();
 	sensorConfiguration_1["sensorIndex"] = 1;
-	if ( (sensorConfiguration_1["sensorIndex"] == sensorNum) || (sensorNum == NUM_OF_SENS) )
+
+	if ( (sensorConfiguration_1["sensorIndex"] == sensor_num) || (sensor_num == NUM_OF_SENS) )
 	{
 		sensorConfiguration_1["active"] = true;
-		sensorConfiguration_1["heaterProfile"] = heaterProfileId;
-		sensorConfiguration_1["dutyCycleProfile"] = dutyCycleProfileId;
+		sensorConfiguration_1["heaterProfile"] = heater_profile_id;
+		sensorConfiguration_1["dutyCycleProfile"] = duty_cycle_profile_id;
 	}
 	else
 	{
@@ -562,11 +574,12 @@ demoRetCode bsecDataLogger::prepareConfigContent(uint8_t sensorNum)
 
 	JsonObject sensorConfiguration_2 = sensorConfigurations.createNestedObject();
 	sensorConfiguration_2["sensorIndex"] = 2;
-	if ( (sensorConfiguration_2["sensorIndex"] == sensorNum) || (sensorNum == NUM_OF_SENS) )
+
+	if ( (sensorConfiguration_2["sensorIndex"] == sensor_num) || (sensor_num == NUM_OF_SENS) )
 	{
 		sensorConfiguration_2["active"] = true;
-		sensorConfiguration_2["heaterProfile"] = heaterProfileId;
-		sensorConfiguration_2["dutyCycleProfile"] = dutyCycleProfileId;
+		sensorConfiguration_2["heaterProfile"] = heater_profile_id;
+		sensorConfiguration_2["dutyCycleProfile"] = duty_cycle_profile_id;
 	}
 	else
 	{
@@ -577,11 +590,12 @@ demoRetCode bsecDataLogger::prepareConfigContent(uint8_t sensorNum)
 
 	JsonObject sensorConfiguration_3 = sensorConfigurations.createNestedObject();
 	sensorConfiguration_3["sensorIndex"] = 3;
-	if ( (sensorConfiguration_3["sensorIndex"] == sensorNum) || (sensorNum == NUM_OF_SENS) )
+
+	if ( (sensorConfiguration_3["sensorIndex"] == sensor_num) || (sensor_num == NUM_OF_SENS) )
 	{
 		sensorConfiguration_3["active"] = true;
-		sensorConfiguration_3["heaterProfile"] = heaterProfileId;
-		sensorConfiguration_3["dutyCycleProfile"] = dutyCycleProfileId;
+		sensorConfiguration_3["heaterProfile"] = heater_profile_id;
+		sensorConfiguration_3["dutyCycleProfile"] = duty_cycle_profile_id;
 	}
 	else
 	{
@@ -593,11 +607,12 @@ demoRetCode bsecDataLogger::prepareConfigContent(uint8_t sensorNum)
 	/* Sensor number 4 in start command is used to test sensors 0 - 3 in multi instance mode*/
 	JsonObject sensorConfiguration_4 = sensorConfigurations.createNestedObject();
 	sensorConfiguration_4["sensorIndex"] = 4;
-	if ( (sensorConfiguration_4["sensorIndex"] == sensorNum) && (sensorNum != NUM_OF_SENS) )
+
+	if ( (sensorConfiguration_4["sensorIndex"] == sensor_num) && (sensor_num != NUM_OF_SENS) )
 	{
 		sensorConfiguration_4["active"] = true;
-		sensorConfiguration_4["heaterProfile"] = heaterProfileId;
-		sensorConfiguration_4["dutyCycleProfile"] = dutyCycleProfileId;
+		sensorConfiguration_4["heaterProfile"] = heater_profile_id;
+		sensorConfiguration_4["dutyCycleProfile"] = duty_cycle_profile_id;
 	}
 	else
 	{
@@ -608,11 +623,12 @@ demoRetCode bsecDataLogger::prepareConfigContent(uint8_t sensorNum)
 
 	JsonObject sensorConfiguration_5 = sensorConfigurations.createNestedObject();
 	sensorConfiguration_5["sensorIndex"] = 5;
-	if (sensorConfiguration_5["sensorIndex"] == sensorNum)
+
+	if (sensorConfiguration_5["sensorIndex"] == sensor_num)
 	{
 		sensorConfiguration_5["active"] = true;
-		sensorConfiguration_5["heaterProfile"] = heaterProfileId;
-		sensorConfiguration_5["dutyCycleProfile"] = dutyCycleProfileId;
+		sensorConfiguration_5["heaterProfile"] = heater_profile_id;
+		sensorConfiguration_5["dutyCycleProfile"] = duty_cycle_profile_id;
 	}
 	else
 	{
@@ -623,11 +639,12 @@ demoRetCode bsecDataLogger::prepareConfigContent(uint8_t sensorNum)
 
 	JsonObject sensorConfiguration_6 = sensorConfigurations.createNestedObject();
 	sensorConfiguration_6["sensorIndex"] = 6;
-	if (sensorConfiguration_6["sensorIndex"] == sensorNum)
+
+	if (sensorConfiguration_6["sensorIndex"] == sensor_num)
 	{
 		sensorConfiguration_6["active"] = true;
-		sensorConfiguration_6["heaterProfile"] = heaterProfileId;
-		sensorConfiguration_6["dutyCycleProfile"] = dutyCycleProfileId;
+		sensorConfiguration_6["heaterProfile"] = heater_profile_id;
+		sensorConfiguration_6["dutyCycleProfile"] = duty_cycle_profile_id;
 	}
 	else
 	{
@@ -638,11 +655,12 @@ demoRetCode bsecDataLogger::prepareConfigContent(uint8_t sensorNum)
 
 	JsonObject sensorConfiguration_7 = sensorConfigurations.createNestedObject();
 	sensorConfiguration_7["sensorIndex"] = 7;
-	if (sensorConfiguration_7["sensorIndex"] == sensorNum)
+
+	if (sensorConfiguration_7["sensorIndex"] == sensor_num)
 	{
 		sensorConfiguration_7["active"] = true;
-		sensorConfiguration_7["heaterProfile"] = heaterProfileId;
-		sensorConfiguration_7["dutyCycleProfile"] = dutyCycleProfileId;
+		sensorConfiguration_7["heaterProfile"] = heater_profile_id;
+		sensorConfiguration_7["dutyCycleProfile"] = duty_cycle_profile_id;
 	}
 	else
 	{	
@@ -650,8 +668,8 @@ demoRetCode bsecDataLogger::prepareConfigContent(uint8_t sensorNum)
 		sensorConfiguration_7["heaterProfile"] = (char*)0;
 		sensorConfiguration_7["dutyCycleProfile"] = (char*)0;
 	}
-	serializeJsonPretty(config, configString);
-	configString = configString.substring(0,configString.length()-1);
+	serializeJsonPretty(config, config_string);
+	config_string = config_string.substring(0,config_string.length()-1);
 
 	return EDK_OK;
 }
@@ -659,33 +677,35 @@ demoRetCode bsecDataLogger::prepareConfigContent(uint8_t sensorNum)
 /*!
  * @brief Function to create a bme68x label information file with .bmelabelinfo extension
  */
-demoRetCode bsecDataLogger::createLabelInfoFile()
+demo_ret_code bsecDataLogger::create_label_info_file()
 {
-	demoRetCode retCode = EDK_OK;
-	String macStr = utils::getMacAddress();
-    String labelFileBaseName = "_Board_" + macStr + "_PowerOnOff_1_";
-	uint16_t labelTag = 1001; //since labelTag starts with 1001
+	demo_ret_code ret_code = EDK_OK;
+	String mac_str = utils::get_mac_address();
+	String label_file_base_name = "_Board_" + mac_str + "_PowerOnOff_1_";
+	uint16_t label_tag = 1001; //since labelTag starts with 1001
 	
-    _labelFileName = utils::getDateTime() + labelFileBaseName + utils::getFileSeed() + "_File_" + String(_bsecFileCounter) + BME68X_LABEL_INFO_FILE_EXT;
+	_label_file_name = utils::get_date_time() + label_file_base_name + utils::get_file_seed() + 
+                   "_File_" + String(_bsec_file_counter) + BME68X_LABEL_INFO_FILE_EXT;
 	File logFile;
-    if (!logFile.open(_labelFileName.c_str(), O_RDWR | O_CREAT))
+
+	if (!logFile.open(_label_file_name.c_str(), O_RDWR | O_CREAT))
 	{
-		retCode = EDK_DATALOGGER_LABEL_INFO_FILE_ERROR;
+		ret_code = EDK_DATALOGGER_LABEL_INFO_FILE_ERROR;
 	}
 	else
 	{
 		filter2.clear();
-		labelDoc.clear();
+		label_doc.clear();
 		
 		/* write labelinfo header / skeleton */
 		logFile.println("{");
 		logFile.println("\t\"labelInfoHeader\": {");
 		logFile.println("\t\t\"counterPowerOnOff\": 1,");
-		logFile.println("\t\t\"seedPowerOnOff\": \"" + utils::getFileSeed() + "\",");
-		logFile.println("\t\t\"dateCreated\": \"" + String(utils::getRtc().now().unixtime()) + "\",");
-		logFile.println("\t\t\"dateCreated_ISO\": \"" + utils::getRtc().now().timestamp() + "+00:00\",");
+		logFile.println("\t\t\"seedPowerOnOff\": \"" + utils::get_file_seed() + "\",");
+		logFile.println("\t\t\"dateCreated\": \"" + String(utils::get_rtc().now().unixtime()) + "\",");
+		logFile.println("\t\t\"dateCreated_ISO\": \"" + utils::get_rtc().now().timestamp() + "+00:00\",");
 		logFile.println("\t\t\"firmwareVersion\": \"" + String(FIRMWARE_VERSION) + "\",");
-		logFile.println("\t\t\"boardId\": \"" + macStr + "\"");
+		logFile.println("\t\t\"boardId\": \"" + mac_str + "\"");
 		logFile.println("\t},");
 		logFile.println("\t\"labelInformation\": [");
 		logFile.println("\t\t{");
@@ -709,28 +729,54 @@ demoRetCode bsecDataLogger::createLabelInfoFile()
 		logFile.println("\t\t\t\"labelDescription\": \"Standard label for hardware button 1 and button 2 pressed\"");
 		logFile.print("\t\t}");
 
+		filter2["aiConfigBody"]["type"] = true;
 		filter2["aiConfigBody"]["classes"] = true;
+		filter2["aiConfigBody"]["targets"] = true;
 
 		File configFile;
-		configFile.open(_aiConfigName.c_str(), O_RDWR);
+		configFile.open(_ai_config_name.c_str(), O_RDWR);
 		
-		DeserializationError error = deserializeJson(labelDoc, configFile, DeserializationOption::Filter(filter2));
+		DeserializationError error = deserializeJson(label_doc, configFile, DeserializationOption::Filter(filter2));
 		configFile.close();
+
 		if (error)
 		{
 			Serial.println(error.c_str());
 			return EDK_SENSOR_MANAGER_JSON_DESERIAL_ERROR;
 		}
 		
-		for (JsonObject classes : labelDoc["aiConfigBody"]["classes"].as<JsonArray>())
+		// reading configuration type
+		const char* type = label_doc["aiConfigBody"]["type"];
+
+		strcpy(ai_config_type, type);
+
+		if (strcmp(type, "classification") == 0)
 		{
-			const char* className = classes["className"];
-			
-			logFile.println(",\n\t\t{");
-			logFile.println("\t\t\t\"labelTag\": " + String(labelTag++) + ",");
-			logFile.println("\t\t\t\"labelName\": \"" + String(className) + "\",");
-			logFile.println("\t\t\t\"labelDescription\": \"Predefined by algorithm classes (className used as labelName)\"");
-			logFile.print("\t\t}");
+
+			for (JsonObject classes : label_doc["aiConfigBody"]["classes"].as<JsonArray>())
+			{
+				const char* class_name = classes["name"];
+
+				logFile.println(",\n\t\t{");
+				logFile.println("\t\t\t\"labelTag\": " + String(label_tag++) + ",");
+				logFile.println("\t\t\t\"labelName\": \"" + String(class_name) + "\",");
+				logFile.println("\t\t\t\"labelDescription\": \"Predefined by algorithm classes (class name used as labelName)\"");
+				logFile.print("\t\t}");
+			}
+		}
+		else if (strcmp(type, "regression") == 0)
+		{
+
+			for (JsonObject target_name : label_doc["aiConfigBody"]["targets"].as<JsonArray>())
+			{
+				const char* targets = target_name["name"];
+
+				logFile.println(",\n\t\t{");
+				logFile.println("\t\t\t\"labelTag\": " + String(label_tag++) + ",");
+				logFile.println("\t\t\t\"labelName\": \"" + String(targets) + "\",");
+				logFile.println("\t\t\t\"labelDescription\": \"Predefined by algorithm Targets (target name used as labelName)\"");
+				logFile.print("\t\t}");
+			}
 		}
 		logFile.println("\n\t]");
 		logFile.print("}");
@@ -739,38 +785,39 @@ demoRetCode bsecDataLogger::createLabelInfoFile()
 		logFile.close();
 		
 	}
-	return retCode;
+	return ret_code;
 }
 
 /*!
  * @brief Function which flushes the buffered sensor data to the current log file
  */
-demoRetCode bsecDataLogger::flushSensorData(uint8_t sensorNum)
+demo_ret_code bsecDataLogger::flush_sensor_data(uint8_t sensor_num)
 {
-	demoRetCode retCode = EDK_OK;
+	demo_ret_code ret_code = EDK_OK;
 	File logFile;
 	std::string txt;
 	
-    if (_bs.rdbuf()->in_avail())
+	if (_bs.rdbuf()->in_avail())
 	{
 		txt = _bs.str();
 		_bs.str(std::string());
 		
-		if (_bmefileCounter && logFile.open(_bmeFileName.c_str(), O_RDWR | O_AT_END))
+		if (_bme_file_counter && logFile.open(_bme_file_name.c_str(), O_RDWR | O_AT_END))
 		{
-			logFile.seek(_bmeDataPos);
+			logFile.seek(_bme_data_pos);
 			logFile.print(txt.c_str());
-			_bmeDataPos = logFile.position();
+			_bme_data_pos = logFile.position();
 			logFile.print("\n\t\t]\n\t}\n}");
 			
 			if (logFile.size() >= FILE_SIZE_LIMIT)
 			{
 				logFile.close();
-				++_bmefileCounter;
-				retCode = createRawDataFile(sensorNum);
-				if (retCode >= EDK_OK)
+				++_bme_file_counter;
+				ret_code = create_raw_data_file(sensor_num);
+
+				if (ret_code >= EDK_OK)
 				{
-					retCode = createLabelInfoFile();
+					ret_code = create_label_info_file();
 				}
 			}
 			else
@@ -780,149 +827,170 @@ demoRetCode bsecDataLogger::flushSensorData(uint8_t sensorNum)
 		}
 		else
 		{
-			retCode = EDK_DATALOGGER_LOG_FILE_ERROR;
+			ret_code = EDK_DATALOGGER_LOG_FILE_ERROR;
 		}
 	}
-	return retCode;
+	return ret_code;
 }
 
 /*!
  * @brief This function writes the bsec output to the current log file
  */
-demoRetCode bsecDataLogger::writeBsecOutput(SensorIoData& buffData)
+demo_ret_code bsecDataLogger::write_bsec_output(sensor_io_data& buff_data)
 {
-	demoRetCode retCode = EDK_OK;	    
+	demo_ret_code ret_code = EDK_OK;	    
 	File logFile;
 	
-	if (_bsecFileCounter && logFile.open(_aiFileName.c_str(), O_RDWR | O_AT_END))
+	if (_bsec_file_counter && logFile.open(_ai_file_name.c_str(), O_RDWR | O_AT_END))
 	{
 		/* set writing position to end of data block */
-		logFile.seek(_aiDataPos);
+		logFile.seek(_ai_data_pos);
 		
-		float gasSignal[4] = {NAN, NAN, NAN, NAN}, iaqSignal = NAN; 
-		uint8_t iaqAccuracy = 0xFF, gasAccuracy = 0xFF; 
+		float gas_signal[4] = {NAN, NAN, NAN, NAN}, iaq_signal = NAN; 
+		uint8_t iaq_accuracy = 0xFF; //, gasAccuracy = 0xFF; 
+		uint8_t gas_accuracy[4] = {0xFF, 0xFF, 0xFF, 0xFF};
+		uint8_t is_reg_class_subscribe = 0;
+		uint8_t Gas_accuracy = 0;
+		uint8_t index = 0;
 		
-		for (uint8_t i = 0; ((buffData.outputs).output != nullptr) && (i < (buffData.outputs).nOutputs); i++) 
+		for (uint8_t i = 0; ((buff_data.outputs).output != nullptr) && (i < (buff_data.outputs).nOutputs); i++) 
 		{
-			const bsec_output_t& output = (buffData.outputs).output[i];
+			const bsec_output_t& output = (buff_data.outputs).output[i];
+
 			switch (output.sensor_id)
 			{
 				case BSEC_OUTPUT_GAS_ESTIMATE_1:
 				case BSEC_OUTPUT_GAS_ESTIMATE_2:
 				case BSEC_OUTPUT_GAS_ESTIMATE_3:
 				case BSEC_OUTPUT_GAS_ESTIMATE_4:
-					gasSignal[output.sensor_id - BSEC_OUTPUT_GAS_ESTIMATE_1] = output.signal;
-					gasAccuracy = (output.accuracy > gasAccuracy) ? gasAccuracy : output.accuracy;
+					index = output.sensor_id - BSEC_OUTPUT_GAS_ESTIMATE_1;
+					gas_signal[index] = output.signal;
+					gas_accuracy[index] = (output.accuracy > gas_accuracy[index]) ? gas_accuracy[index] : output.accuracy;
+					Gas_accuracy |= ((gas_accuracy[index] & 0x03) << (index * 2));
+					is_reg_class_subscribe = 1;
+				break;
+				case BSEC_OUTPUT_REGRESSION_ESTIMATE_1:
+				case BSEC_OUTPUT_REGRESSION_ESTIMATE_2:
+				case BSEC_OUTPUT_REGRESSION_ESTIMATE_3:
+				case BSEC_OUTPUT_REGRESSION_ESTIMATE_4:
+					index = output.sensor_id -  BSEC_OUTPUT_REGRESSION_ESTIMATE_1;
+					gas_signal[index] = output.signal;
+					gas_accuracy[index] = (output.accuracy > gas_accuracy[index]) ? gas_accuracy[index] : output.accuracy;
+					Gas_accuracy |= ((gas_accuracy[index] & 0x03) << (index * 2));
+					is_reg_class_subscribe = 1;
 				break;
 				case BSEC_OUTPUT_IAQ:
-					iaqSignal = output.signal;
-					iaqAccuracy = output.accuracy;
+					iaq_signal = output.signal;
+					iaq_accuracy = output.accuracy;
 				break;
 				default:
 				break;
 			}
 		}
-		
-		if (!_firstLine)
+
+		if (!_first_line)
 		{
 			logFile.println(",");
 		}		
 		logFile.print("\t\t\t[\n\t\t\t\t");
-		logFile.print(buffData.sensorNum);
+		logFile.print(buff_data.sensor_num);
 		logFile.print(",\n\t\t\t\t");
-		logFile.print(buffData.sensorId);
+		logFile.print(buff_data.sensor_id);
 		logFile.print(",\n\t\t\t\t");
-		logFile.print(buffData.startTimeSincePowerOn);
+		logFile.print(buff_data.start_time_since_power_on);
 		logFile.print(",\n\t\t\t\t");
-		logFile.print(buffData.endTimeSincePowerOn);
+		logFile.print(buff_data.end_time_since_power_on);
 		logFile.print(",\n\t\t\t\t");
-		(!isnan(gasSignal[0])) ? logFile.print(gasSignal[0]) : logFile.print("null");
+		(!isnan(gas_signal[0])) ? logFile.print(gas_signal[0]) : logFile.print("null");
 		logFile.print(",\n\t\t\t\t");
-		(!isnan(gasSignal[1])) ? logFile.print(gasSignal[1]) : logFile.print("null");
+		(!isnan(gas_signal[1])) ? logFile.print(gas_signal[1]) : logFile.print("null");
 		logFile.print(",\n\t\t\t\t");
-		(!isnan(gasSignal[2])) ? logFile.print(gasSignal[2]) : logFile.print("null");
+		(!isnan(gas_signal[2])) ? logFile.print(gas_signal[2]) : logFile.print("null");
 		logFile.print(",\n\t\t\t\t");
-		(!isnan(gasSignal[3])) ? logFile.print(gasSignal[3]) : logFile.print("null");
+		(!isnan(gas_signal[3])) ? logFile.print(gas_signal[3]) : logFile.print("null");
 		logFile.print(",\n\t\t\t\t");
-		(gasAccuracy != 0xFF) ? logFile.print(gasAccuracy) : logFile.print("null");
+		(is_reg_class_subscribe == 1) ? logFile.print(Gas_accuracy) : logFile.print("null");
 		logFile.print(",\n\t\t\t\t");
-		(!isnan(iaqSignal)) ? logFile.print(iaqSignal) : logFile.print("null");
+		(!isnan(iaq_signal)) ? logFile.print(iaq_signal) : logFile.print("null");
 		logFile.print(",\n\t\t\t\t");
-		(iaqAccuracy != 0xFF) ? logFile.print(iaqAccuracy) : logFile.print("null");
+		(iaq_accuracy != 0xFF) ? logFile.print(iaq_accuracy) : logFile.print("null");
 		logFile.print(",\n\t\t\t\t");
-		logFile.print(buffData.code);
+		logFile.print(buff_data.code);
 		logFile.print(",\n\t\t\t\t");
-		logFile.println(buffData.groundTruth);
+		logFile.println(buff_data.ground_truth);
 		logFile.print("\t\t\t]");
 		
-		_aiDataPos = logFile.position();
-		_firstLine = false;
+		_ai_data_pos = logFile.position();
+		_first_line = false;
 		logFile.println("\n\t\t]\n\t}\n}");
 		
 		logFile.close();
 	}
 	else 
 	{
-		retCode = EDK_DATALOGGER_LOG_FILE_ERROR;
+		ret_code = EDK_DATALOGGER_LOG_FILE_ERROR;
 	}
-    return retCode;	
+	return ret_code;
 }
 
 /*!
  * @brief This function writes the sensor data to the current log file.
  */ 
-demoRetCode bsecDataLogger::writeSensorData(const uint8_t* num, const uint32_t* sensorId, const bme68x_data* bme68xData, const uint32_t* scanCycleIndex, uint32_t groundTruth, demoRetCode code, SensorIoData& buffData)
+demo_ret_code bsecDataLogger::write_sensor_data(const uint8_t* num, const uint32_t* sensor_id,
+                                            const bme68x_data* bme68xData, const uint32_t* scan_cycle_index,
+                                            uint32_t ground_truth, demo_ret_code code, sensor_io_data& buff_data)
 {
-	demoRetCode retCode = EDK_OK;
-    uint32_t rtcTsp = utils::getRtc().now().unixtime();
-    uint32_t timeSincePowerOn = millis();
+	demo_ret_code ret_code = EDK_OK;
+	uint32_t rtc_tsp = utils::get_rtc().now().unixtime();
+	uint32_t time_since_power_on = millis();
 
 	//Copying time for sync with aiprediction file
-	if(bme68xData != nullptr)
+	if (bme68xData != nullptr)
 	{
-		if(bme68xData->gas_index == 0)
+
+		if (bme68xData->gas_index == 0)
 		{
-			buffData.startTimeSincePowerOn = timeSincePowerOn;
+			buff_data.start_time_since_power_on = time_since_power_on;
 		}
 		else
 		{
-			buffData.endTimeSincePowerOn = timeSincePowerOn;
+			buff_data.end_time_since_power_on = time_since_power_on;
 		}
 	}
 
-	if (_endOfLine)
+	if (_end_of_line)
 	{
 		_bs << ",\n";
 	}
 	_bs << "\t\t\t[\n\t\t\t\t";
-	(num != nullptr) ? (_bs << (int)*num) : (_bs << "null");
+	(num != nullptr) ? (_bs << (int32_t)*num) : (_bs << "null");
 	_bs << ",\n\t\t\t\t";
-	(sensorId != nullptr) ? (_bs << (int)*sensorId) : (_bs << "null");
+	(sensor_id != nullptr) ? (_bs << (int32_t)*sensor_id) : (_bs << "null");
 	_bs << ",\n\t\t\t\t";
-	_bs << timeSincePowerOn;
+	_bs << time_since_power_on;
 	_bs << ",\n\t\t\t\t";
-	_bs << rtcTsp;
+	_bs << rtc_tsp;
 	_bs << ",\n\t\t\t\t";
 	(bme68xData != nullptr) ? (_bs << bme68xData->temperature) : (_bs << "null");
 	_bs << ",\n\t\t\t\t";
-	(bme68xData != nullptr) ? (_bs << bme68xData->pressure * .01f) : (_bs << "null");
+	(bme68xData != nullptr) ? (_bs << bme68xData->pressure) : (_bs << "null");
 	_bs << ",\n\t\t\t\t";
 	(bme68xData != nullptr) ? (_bs << bme68xData->humidity) : (_bs << "null");
 	_bs << ",\n\t\t\t\t";
 	(bme68xData != nullptr) ? (_bs << bme68xData->gas_resistance) : (_bs << "null");
 	_bs << ",\n\t\t\t\t";
-	(bme68xData != nullptr) ? (_bs << (int)bme68xData->gas_index) : (_bs << "null");
+	(bme68xData != nullptr) ? (_bs << (int32_t)bme68xData->gas_index) : (_bs << "null");
 	_bs << ",\n\t\t\t\t";
 	_bs << (bool)(BME68X_PARALLEL_MODE);
 	_bs << ",\n\t\t\t\t";
-	(scanCycleIndex != nullptr) ? (_bs << (int)(*scanCycleIndex)) : (_bs << "null");
+	(scan_cycle_index != nullptr) ? (_bs << (int32_t)(*scan_cycle_index)) : (_bs << "null");
 	_bs << ",\n\t\t\t\t";
-	_bs << groundTruth;
+	_bs << ground_truth;
 	_bs << ",\n\t\t\t\t";
-	_bs << (int)code;
+	_bs << (int32_t)code;
 	_bs << "\n\t\t\t]";
 
-	_endOfLine = true;
+	_end_of_line = true;
    
-    return retCode;
+  return ret_code;
 }

@@ -2,7 +2,7 @@
 
 ## About BSEC
 
-Bosch Sensortec Environmental Cluster (BSEC) Software v2.4.0.0 released on January 23rd, 2023
+Bosch Sensortec Environmental Cluster (BSEC) Software v2.5.0.2 released on December, 18th 2023
 
 The BSEC fusion library has been conceptualized to provide a higher-level signal processing and fusion for the BME688. The library receives compensated sensor values from the sensor API. It processes the BME688 signals to provide the requested sensor outputs.
 
@@ -32,12 +32,14 @@ Available binaries for download:
 
 | Platform | Compiler | TYPE |
 |----------|----------|------|
-| Cortex-ARM | GCC | Cortex-M0+, M3, M4, M4_FPU, M33_FPU |
+| Cortex-ARM | GCC | Cortex-M0+, M3, M4, M4_FPU, M33, M33_FPU |
 | ESP8266 | xtensa-lx106-elf-gcc | ESP8266 |
 | ESP32 | xtensa-esp32-elf-gcc | ESP32 |
 | ESP32 | xtensa-esp32s2-elf-gcc | ESP32-S2 |
 | ESP32 | xtensa-esp32s3-elf-gcc | ESP32-S3 |
 | ESP32 | riscv32-esp-elf-gcc | ESP32-C3 |
+
+Note: The following libraries are not tested - M4 and M33
 
 The library size information above doesn't include additional dependencies based on the embedded system project & platform.
 
@@ -93,7 +95,7 @@ Select your board and COM port. Upload the example. Open the Serial monitor. You
 
 - basic_config_state.ino: This is an example for illustrating the BSEC feature using desired configuration setting.
 
-- bme68x_demo_sample.ino: This demonstrator application running on an x8 board has the feature of sensor data logging and BSEC algorithm illustrated. Please refer [BME688 Development Kit-Firmware-Quick-Start-Guide](examples/bme68x_demo_sample/Quick_Start_Guide.md) for installing dependent libraries and how to flash.
+- bme68x_demo_sample.ino: This demonstrator application running on an x8 board has the feature of sensor data logging and BSEC algorithm illustration. Please refer [BME688 Development Kit-Firmware-Quick-Start-Guide](examples/bme68x_demo_sample/Quick_Start_Guide.md) for installing dependent libraries and how to flash.
 	
 	**Note:** Please ensure to use the bsec_interface_multi.h header file specifically, for demonstrating the multi instance feature
 

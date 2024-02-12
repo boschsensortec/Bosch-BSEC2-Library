@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	    label_provider.cpp
- * @date		11 April 2023
- * @version		2.0.9
+ * @date		04 Dec 2023
+ * @version		2.1.4
  * 
  * @brief       label provider
  *
@@ -42,8 +42,8 @@
 /* own header include */
 #include "label_provider.h"
 
-volatile gasLabel labelProvider::_label;
-volatile bool labelProvider::_but1Pressed, labelProvider::_but2Pressed;
+volatile gas_label labelProvider::_label;
+volatile bool labelProvider::_but1_pressed, labelProvider::_but2_pressed;
 
 QueueHandle_t labelProvider::_queue = nullptr; 
 
@@ -58,83 +58,87 @@ labelProvider::labelProvider()
  */
 void labelProvider::begin()
 {
-    _but1Pressed = false;
-	_but2Pressed = false;
+	_but1_pressed = false;
+	_but2_pressed = false;
 	
-	_queue = xQueueCreate(2, sizeof(gasLabel));
+	_queue = xQueueCreate(2, sizeof(gas_label));
 	
 	/* Button interrupts setup and attachment */
-    pinMode(PIN_BUTTON_1, INPUT_PULLUP);
-    pinMode(PIN_BUTTON_2, INPUT_PULLUP);
-	
-    attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_1), isrButton1, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_2), isrButton2, CHANGE);
+	pinMode(PIN_BUTTON_1, INPUT_PULLUP);
+	pinMode(PIN_BUTTON_2, INPUT_PULLUP);
+
+	attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_1), isr_button1, CHANGE);
+	attachInterrupt(digitalPinToInterrupt(PIN_BUTTON_2), isr_button2, CHANGE);
 }
 
 /*!
  * @brief This function is the interrupt function, that handles the button press of the first button
  */
-void labelProvider::isrButton1()
+void labelProvider::isr_button1()
 {
     /* check if button is pressed or idle */
-	if (_but1Pressed == false)
-    {
+	if (_but1_pressed == false)
+	{
 		/* determine if only this button or both are pressed and set helper button label */
-        _but1Pressed = true;
-        if (_but2Pressed)
-        {
-            _label = BSEC_CLASS_3;
-        }
-        else
-        {
-            _label = BSEC_CLASS_1;
-        }
-    }
-    else
-    {
+		_but1_pressed = true;
+		
+		if (_but2_pressed)
+		{
+			_label = BSEC_CLASS_3;
+		}
+		else
+		{
+			_label = BSEC_CLASS_1;
+		}
+	}
+	else
+	{
 		/* if both buttons are released, user label according to helper button label */
-        _but1Pressed = false;
-        if (!_but2Pressed)
-        {
+		_but1_pressed = false;
+		
+		if (!_but2_pressed)
+		{
 			xQueueSendFromISR(_queue, (const void*)&_label, 0);
-        }
-    }
+		}
+	}
 }
 
 /*!
  * @brief This function is the interrupt function, that handles the button press of the second button
  */
-void labelProvider::isrButton2()
+void labelProvider::isr_button2()
 {
-    /* check if button is pressed or idle */
-    if (_but2Pressed == false)
-    {
-        /* determine if only this button or both are pressed and set helper button label */
-        _but2Pressed = true;
-        if (_but1Pressed)
-        {
-            _label = BSEC_CLASS_3;
-        }
-        else
-        {
-            _label = BSEC_CLASS_2;
-        }
-    }
-    else
-    {
-        /* if both buttons are released, user label according to helper button label */
-        _but2Pressed = false;
-        if (!_but1Pressed)
-        {
+	/* check if button is pressed or idle */
+	if (_but2_pressed == false)
+	{
+		/* determine if only this button or both are pressed and set helper button label */
+		_but2_pressed = true;
+		
+		if (_but1_pressed)
+		{
+			_label = BSEC_CLASS_3;
+		}
+		else
+		{
+			_label = BSEC_CLASS_2;
+		}
+	}
+	else
+	{
+		/* if both buttons are released, user label according to helper button label */
+		_but2_pressed = false;
+		
+		if (!_but1_pressed)
+		{
 			xQueueSendFromISR(_queue, (const void*)&_label, 0);
-        }
-    }
+		}
+	}
 }
 
 /*!
  * @brief This function retrieves the current label
  */
-bool labelProvider::getLabel(gasLabel &label)
+bool labelProvider::get_label(gas_label &label)
 {
 	return xQueueReceive(_queue, &label, 0);
 }

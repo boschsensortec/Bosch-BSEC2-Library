@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	demo_app.h
- * @date	11 April 2023
- * @version	2.0.9
+ * @date	04 Dec 2023
+ * @version	2.1.4
  * 
  * @brief	Header file for the bosch application definitions
  * 
@@ -44,12 +44,12 @@
 
 #include "bsec2.h"
 
-#define FIRMWARE_VERSION 		"2.0.9"
+#define FIRMWARE_VERSION 		"2.1.4"
 
 /*!
  * @brief Enumeration for demo app mode
  */
-enum demoAppMode
+enum demo_app_mode
 {
 	DEMO_RECORDING_MODE,
 	DEMO_TEST_ALGORITHM_MODE,
@@ -59,7 +59,7 @@ enum demoAppMode
 /*!
  * @brief Enumeration for the demo app return code
  */
-enum demoRetCode
+enum demo_ret_code
 {
 	EDK_LABEL_NOT_FOUND = -28,
 	EDK_DATALOGGER_LABEL_INFO_FILE_ERROR = -27,
@@ -107,31 +107,31 @@ enum demoRetCode
 /*!
  * @brief Structure to hold heater profile data
  */
-struct bme68xHeaterProfile 
+struct bme68x_heater_profile 
 {
-	uint64_t sleepDuration;
+	uint64_t sleep_duration;
 	uint16_t temperature[10];
 	uint16_t duration[10];
-	uint8_t nbRepetitions;
+	uint8_t nb_repetitions;
 	uint8_t length;
 };
 
 /*!
  * @brief Structure to hold sensor state information
  */
-struct bme68xSensor
+struct bme68x_sensor
 {
 	bme68xDev device;
-	bme68xHeaterProfile heaterProfile;
+	bme68x_heater_profile heater_profile;
 	
-	uint64_t wakeUpTime;
+	uint64_t wake_up_time;
 	uint32_t id;
-	bool isConfigured;
+	bool is_configured;
 	uint8_t mode;
-	uint8_t cyclePos;
-	uint8_t nextGasIndex;
-	int8_t i2cMask;
-	uint32_t scanCycleIndex;
+	uint8_t cycle_pos;
+	uint8_t next_gas_index;
+	int8_t i2c_mask;
+	uint32_t scan_cycle_index;
 };
 
 #endif

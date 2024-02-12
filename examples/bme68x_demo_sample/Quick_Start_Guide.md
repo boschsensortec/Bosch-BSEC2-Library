@@ -57,21 +57,25 @@ The example code will primarily operate in two modes-
 
 **b. DEMO_TEST_ALGORITHM_MODE**
 
+- Multi sensor support is available in DEMO_RECORDING_MODE upto 8 sensors.
+- Modify NUM_BME68X_UNITS between 0 to 8, where 0 to 7 is for sensor numbers 1 to 8 respectively and 8 is for running all 8 sensors parallely.
+- Multi sensor support is available in DEMO_TEST_ALGORITHM_MODE upto 4 sensors.
+- Modify NUM_BME68X_UNITS between 0 to 4, where 0 to 3 is for sensor numbers 1 to 4 respectively and 4 is for running all 4 sensors parallely.
+
 ### Note:
 
 - After successfully flashing the firmware, "DEMO_RECORDING_MODE" is the default mode set in the example.
 
-- An initial check for the availability of sensor board configuration file (.bmeconfig) inside SD card
-is performed.
+- An initial check for the availability of sensor board configuration file (.bmeconfig) inside SD card is performed.
 
 - For DEMO_RECORDING_MODE, once .bmeconfig file has been detected, it will initialize and set the heater profiles for all the bme688 sensors with the provided configuration and create bme68x datalogger output file (with '.bmerawdata' extension).
 
-- Until the user connects the board to the BME688 demo application through Bluetooth LE, it will continuously collect the data in DEMO_RECORDING_MODE.
+- Until the user connects the board to the BME688 demo application through Bluetooth LE and switches to "DEMO_TEST_ALGORITHM_MODE", it will continue to collect the data in DEMO_RECORDING_MODE.
 
-- When it comes to 'DEMO_TEST_ALGORITHM_MODE' (connecting over bluetooth), initialization of sensor and BSEC library is undertaken.
+- When it comes to 'DEMO_TEST_ALGORITHM_MODE' (connecting over bluetooth and set to "DEMO_TEST_ALGORITHM_MODE"), initialization of sensor and BSEC library is undertaken.
 
-- Furthermore, configuring with the BSEC config file (generated out of training through BME AI Studio or a default configuration from the BSEC website release package) and subscribing for the desired virtual outputs with the supported sample rate is complete, an output data file is created with the '.bsecdata' extension.
+- Furthermore, configuring with the BSEC config file (generated out of training through BME AI Studio or a default configuration from the BSEC website release package) and subscribing for the desired virtual outputs with the supported sample rate is complete, an output data file is created with the '.aiprediction' extension.
 
-- While the bluetooth connection is active, it will continue to operate in the 'DEMO_TEST_ALGORITHM_MODE' and collect the sensor data from one of the sensors in the board for processing and stores the outputs in the output datalog file.
+- If the Bluetooth is disconnected, the board continuous to work in the existing mode unless power is reset.
 
-- Once bluetooth is disconnected, the device switches to the 'DEMO_RECORDING_MODE', where the data is logged into a new  output file (.bmerawdata).
+- The default bootup mode is "DEMO_RECORDING_MODE".

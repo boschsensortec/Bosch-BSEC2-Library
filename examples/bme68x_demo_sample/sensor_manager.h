@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	sensor_manager.h
- * @date	11 April 2023
- * @version	2.0.9
+ * @date	04 Dec 2023
+ * @version	2.1.4
  * 
  * @brief	Header file for the sensor manager
  * 
@@ -52,20 +52,20 @@
 #include "utils.h"
 #include "demo_app.h"
 #include <bme68xLibrary.h>
-#include "commMux.h"
+#include <commMux\commMux.h>
 
 /* I2C-Expander masks */
 #define I2C_EXPANDER_ADDR 				0x20
 #define I2C_EXPANDER_OUTPUT_REG_ADDR 	0x01
 #define I2C_EXPANDER_CONFIG_REG_ADDR 	0x03
 #define I2C_EXPANDER_CONFIG_REG_MASK 	0x00
-#define SPI_COMM_SPEED 					4000000
-#define NUM_BME68X_UNITS				8	
-#define HEATER_TIME_BASE				140
-#define MAX_HEATER_DURATION				200
+#define SPI_COMM_SPEED 					UINT32_C(4000000)
+#define NUM_BME68X_UNITS				UINT8_C(8)
+#define HEATER_TIME_BASE				UINT8_C(140)
+#define MAX_HEATER_DURATION				UINT8_C(200)
 #define GAS_WAIT_SHARED					UINT8_C(140)
 /* Size of Json document in bytes */
-#define JSON_DOC_SIZE 					5000
+#define JSON_DOC_SIZE 					UINT16_C(5000)
 
 /*!
  * @brief : Class library that holds the functionality of the sensor manager
@@ -73,9 +73,9 @@
 class sensorManager
 {
 private:
-	static bme68xSensor 		_sensors[NUM_BME68X_UNITS];
-	Bme68x 						bme68xSensors[NUM_BME68X_UNITS];
-	bme68x_data 				_fieldData[3];
+	static bme68x_sensor _sensors[NUM_BME68X_UNITS];
+	Bme68x 				bme68xSensors[NUM_BME68X_UNITS];
+	bme68x_data 		 _field_data[3];
 
 	StaticJsonDocument<JSON_DOC_SIZE>	_configDoc;
 	
@@ -87,7 +87,7 @@ private:
      * 
      * @return 0 on success, lessthan zero otherwise
 	 */
-	int8_t initializeSensor(uint8_t sensorNumber, uint32_t& sensorId);
+	int8_t initialize_sensor(uint8_t sensor_number, uint32_t& sensor_id);
 	/*!
 	 * @brief : This function configures the heater settings of the sensor
 	 * 
@@ -98,7 +98,8 @@ private:
      * 
      * @return  bme68x return code
 	 */
-	int8_t setHeaterProfile(const String& heaterProfileStr, const String& dutyCycleStr, bme68xHeaterProfile& heaterProfile, uint8_t sensorNumber);
+	int8_t set_heater_profile(const String& heater_profile_str, const String& duty_cycle_str, 
+	                        bme68x_heater_profile& heater_profile, uint8_t sensor_number);
 	
 	/*!
 	 * @brief : This function configures the bme688 sensor
@@ -108,7 +109,7 @@ private:
      * 
      * @return  bme68x return code
 	 */
-	int8_t configureSensor(bme68xHeaterProfile& heaterProfile, uint8_t sensorNumber);
+	int8_t configure_sensor(bme68x_heater_profile& heater_profile, uint8_t sensor_number);
 public:
 	/*!
 	 * @brief : This function retrieves the selected sensor.
@@ -117,10 +118,11 @@ public:
      * 
      * @return  Pointer to sensor if it exists, else nullptr
 	 */
-    static inline bme68xSensor* getSensor(uint8_t num)
+	static inline bme68x_sensor* get_sensor(uint8_t num)
 	{
-		bme68xSensor* sensor = nullptr;
-		if(num < NUM_BME68X_UNITS)
+		bme68x_sensor* sensor = nullptr;
+
+		if (num < NUM_BME68X_UNITS)
 		{
 			sensor = &_sensors[num];
 		}
@@ -135,14 +137,16 @@ public:
      * 
      * @return  True if available
 	 */
-	static inline bool selectNextSensor(uint64_t& wakeUpTime, uint8_t& num, uint8_t mode)
+	static inline bool select_next_sensor(uint64_t& wake_up_time, uint8_t& num, uint8_t mode)
 	{
 		num = (uint8_t)0xFF;
+
 		for (uint8_t i = 0; i < NUM_BME68X_UNITS; i++)
 		{
-			if ((_sensors[i].mode == mode) && (_sensors[i].wakeUpTime < wakeUpTime))
+
+			if ((_sensors[i].mode == mode) && (_sensors[i].wake_up_time < wake_up_time))
 			{
-				wakeUpTime = _sensors[i].wakeUpTime;
+				wake_up_time = _sensors[i].wake_up_time;
 				num = i;
 			}
 		}
@@ -161,23 +165,24 @@ public:
      * 
      * @return  True if available
 	 */
-	static inline bool scheduleSensor(uint8_t& num)
+	static inline bool schedule_sensor(uint8_t& num)
 	{
-		uint64_t wakeUpTime = utils::getTickMs() + 20;
-		return (selectNextSensor(wakeUpTime, num, BME68X_PARALLEL_MODE) || selectNextSensor(wakeUpTime, num, BME68X_SLEEP_MODE));
+		uint64_t wake_up_time = utils::get_tick_ms() + 20;
+		return (select_next_sensor(wake_up_time, num, BME68X_PARALLEL_MODE) ||
+		        select_next_sensor(wake_up_time, num, BME68X_SLEEP_MODE));
 	};
 	
     /*!
      * @brief : The constructor of the sensorManager class
      *        	Creates an instance of the class
      */
-    sensorManager();
+	sensorManager();
 	
 	/*!
      * @brief : This function initializes all bme688 sensors. It does not configure the sensor manager for data collection, 
 	 *		 	the begin function should be used instead for this purpose.
      */
-	demoRetCode initializeAllSensors();
+	demo_ret_code initialize_all_sensors();
 	
 	/*!
 	 * @brief : This function configures the sensor manager using the provided config file.
@@ -186,7 +191,7 @@ public:
      * 
      * @return  error code
 	 */
-    demoRetCode begin(const String& config);
+	demo_ret_code begin(const String& config);
 	
 	/*!
 	 * @brief : This function retrieves the selected sensor data.
@@ -196,7 +201,7 @@ public:
      * 
      * @return  error code
 	 */
-    demoRetCode collectData(uint8_t num, bme68x_data* data[3]);
+	demo_ret_code collect_data(uint8_t num, bme68x_data* data[3]);
 };
 
 #endif

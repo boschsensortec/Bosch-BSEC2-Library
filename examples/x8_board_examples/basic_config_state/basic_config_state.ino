@@ -25,9 +25,28 @@
 
 #include <EEPROM.h>
 #include <bsec2.h>
-#include "commMux.h"
+#include <commMux\commMux.h>
 /* For two class classification use configuration under config/FieldAir_HandSanitizer */
-#include "config/FieldAir_HandSanitizer/FieldAir_HandSanitizer.h"
+#define CLASSIFICATION	1
+#define REGRESSION		  2
+
+#define COMPLETED       1
+
+/* Note : 
+          For the classification output from BSEC algorithm set OUTPUT_MODE macro to CLASSIFICATION.
+          For the regression output from BSEC algorithm set OUTPUT_MODE macro to REGRESSION.
+*/
+#define OUTPUT_MODE   CLASSIFICATION
+
+#if (OUTPUT_MODE == CLASSIFICATION)
+  const uint8_t bsec_config[] = {
+                                  #include "config/FieldAir_HandSanitizer/bsec_selectivity.txt"
+                                };
+#elif (OUTPUT_MODE == REGRESSION)
+  const uint8_t bsec_config[] = {
+                                  #include "config/bme688/bme688_reg_18v_300s_4d/bsec_selectivity.txt"
+                                };
+#endif
 
 /* Macros used */
 #define STATE_SAVE_PERIOD   UINT32_C(360 * 60 * 1000) /* 360 minutes - 4 times a day */
@@ -76,7 +95,7 @@ bool saveState(Bsec2 bsec);
 
 /* Create an object of the class Bsec2 */
 Bsec2 envSensor[NUM_OF_SENS];
-commMux commConfig[NUM_OF_SENS];
+comm_mux commConfig[NUM_OF_SENS];
 uint8_t bsecMemBlock[NUM_OF_SENS][BSEC_INSTANCE_SIZE];
 uint8_t sensor = 0;
 static uint8_t bsecState[BSEC_MAX_STATE_BLOB_SIZE];
@@ -86,7 +105,9 @@ const String gasName[] = { "Field Air", "Hand sanitizer", "Undefined 3", "Undefi
 /* Entry point for the example */
 void setup(void)
 {
-  /* Desired subscription list of BSEC2 outputs */
+	
+#if (OUTPUT_MODE == CLASSIFICATION)
+	/* Desired subscription list of BSEC2 Classification outputs */
     bsecSensor sensorList[] = {
             BSEC_OUTPUT_RAW_TEMPERATURE,
             BSEC_OUTPUT_RAW_PRESSURE,
@@ -98,40 +119,60 @@ void setup(void)
             BSEC_OUTPUT_GAS_ESTIMATE_3,
             BSEC_OUTPUT_GAS_ESTIMATE_4
     };
+#elif (OUTPUT_MODE == REGRESSION)
+	/* Desired subscription list of BSEC2 Regression outputs */
+	bsecSensor sensorList[] = {
+            BSEC_OUTPUT_RAW_TEMPERATURE,
+            BSEC_OUTPUT_RAW_PRESSURE,
+            BSEC_OUTPUT_RAW_HUMIDITY,
+            BSEC_OUTPUT_RAW_GAS,
+            BSEC_OUTPUT_RAW_GAS_INDEX,
+            BSEC_OUTPUT_REGRESSION_ESTIMATE_1,
+            BSEC_OUTPUT_REGRESSION_ESTIMATE_2,
+            BSEC_OUTPUT_REGRESSION_ESTIMATE_3,
+            BSEC_OUTPUT_REGRESSION_ESTIMATE_4
+    };
+#endif
 
     Serial.begin(115200);
     EEPROM.begin(BSEC_MAX_STATE_BLOB_SIZE + 1);
     /* Initiate SPI communication */
-    commMuxBegin(Wire, SPI);
+    comm_mux_begin(Wire, SPI);
     pinMode(PANIC_LED, OUTPUT);
-	delay(100);
-     /* Valid for boards with USB-COM. Wait until the port is open */
+	  delay(100);
+	  /* Valid for boards with USB-COM. Wait until the port is open */
     while (!Serial) delay(10);
 
+    uint8_t state_write_otp = 0;
+    
     for (uint8_t i = 0; i < NUM_OF_SENS; i++)
     {
         /* Sets the Communication interface for the given sensor */
-        commConfig[i] = commMuxSetConfig(Wire, SPI, i, commConfig[i]);
+        commConfig[i] = comm_mux_set_config(Wire, SPI, i, commConfig[i]);
     
          /* Assigning a chunk of memory block to the bsecInstance */
          envSensor[i].allocateMemory(bsecMemBlock[i]);
    
         /* Initialize the library and interfaces */
-        if (!envSensor[i].begin(BME68X_SPI_INTF, commMuxRead, commMuxWrite, commMuxDelay, &commConfig[i]))
+        if (!envSensor[i].begin(BME68X_SPI_INTF, comm_mux_read, comm_mux_write, comm_mux_delay, &commConfig[i]))
         {
             checkBsecStatus (envSensor[i]);
         }
 
         /* Load the configuration string that stores information on how to classify the detected gas */
-        if (!envSensor[i].setConfig(FieldAir_HandSanitizer_config))
+        if (!envSensor[i].setConfig(bsec_config))
         {
-            checkBsecStatus (envSensor[i]);
+        	checkBsecStatus (envSensor[i]);
         }
 
         /* Copy state from the EEPROM to the algorithm */
-        if (!loadState(envSensor[i]))
+        if (state_write_otp == 0) 
         {
-            checkBsecStatus (envSensor[i]);
+          if (!loadState(envSensor[i]))
+          {
+              checkBsecStatus (envSensor[i]);
+          }
+          state_write_otp = COMPLETED;
         }
 
         /* Subscribe for the desired BSEC2 outputs */
@@ -203,6 +244,9 @@ void newDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bse
 
     Serial.println("BSEC outputs:\n\tsensor num = " + String(sensor));
     Serial.println("\ttimestamp = " + String((int) (outputs.output[0].time_stamp / INT64_C(1000000))));
+
+	  int index = 0;
+
     for (uint8_t i = 0; i < outputs.nOutputs; i++)
     {
         const bsecData output  = outputs.output[i];
@@ -233,13 +277,23 @@ void newDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bse
             case BSEC_OUTPUT_GAS_ESTIMATE_2:
             case BSEC_OUTPUT_GAS_ESTIMATE_3:
             case BSEC_OUTPUT_GAS_ESTIMATE_4:
-                if((int)(output.signal * 10000.0f) > 0) /* Ensure that there is a valid value xx.xx% */
+                index = (output.sensor_id - BSEC_OUTPUT_GAS_ESTIMATE_1);
+                if (index == 0) // The four classes are updated from BSEC with same accuracy, thus printing is done just once.
                 {
-                    Serial.println("\t" + \
-                      gasName[(int) (output.sensor_id - BSEC_OUTPUT_GAS_ESTIMATE_1)] + \
-                      String(" probability : ") + String(output.signal * 100) + "%");
-                    Serial.println("\tgas accuracy = " + String((int) output.accuracy));
+                  Serial.println("\taccuracy = " + String((int) output.accuracy));
                 }
+                Serial.println(("\tclass " + String(index + 1) + " probability : ") + String(output.signal * 100) + "%");
+                break;
+            case BSEC_OUTPUT_REGRESSION_ESTIMATE_1:
+            case BSEC_OUTPUT_REGRESSION_ESTIMATE_2:
+            case BSEC_OUTPUT_REGRESSION_ESTIMATE_3:
+            case BSEC_OUTPUT_REGRESSION_ESTIMATE_4:                
+                index = (output.sensor_id - BSEC_OUTPUT_REGRESSION_ESTIMATE_1);
+                if (index == 0) // The four targets are updated from BSEC with same accuracy, thus printing is done just once.
+                {
+                  Serial.println("\taccuracy = " + String(output.accuracy));
+                }
+                Serial.println("\ttarget " + String(index + 1) + " : " + String(output.signal * 100));
                 break;
             default:
                 break;

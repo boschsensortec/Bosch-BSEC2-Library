@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	    ble_controller.cpp
- * @date	    11 April 2023
- * @version		2.0.9
+ * @date	    04 Dec 2023
+ * @version		2.1.4
  * 
  * @brief    	ble_controller
  *
@@ -42,23 +42,23 @@
 /* own header include */
 #include "ble_controller.h"
 
-bleController::bleCmd		bleController::cmdList[] = {
-    {"setlabel", &bleController::parseCmdSetLabel, bleController::SET_LABEL},
-	{"setlabelinfo", &bleController::parseCmdSetLabelInfo, bleController::SET_LABEL_INFO},
-	{"getlabelinfo", &bleController::parseCmdGetLabelInfo, bleController::GET_LABEL_INFO},
-	{"setrtctime", &bleController::parseCmdSetRtcTime, bleController::SET_RTC_TIME},
-	{"getrtctime", &bleController::parseCmdGetRtcTime, bleController::GET_RTC_TIME},
-	{"start", &bleController::parseCmdStartStreaming, bleController::START_STREAMING},
-	{"stop", &bleController::parseCmdStopStreaming, bleController::STOP_STREAMING},
-	{"readconfig", &bleController::parseCmdReadConfig, bleController::READ_CONFIG},
-	{"setappmode", &bleController::parseCmdSetAppmode, bleController::SET_APPMODE},
-	{"getappmode", &bleController::parseCmdGetAppmode, bleController::GET_APPMODE},
-	{"setgroundtruth", &bleController::parseCmdSetGroundtruth, bleController::SET_GROUNDTRUTH},
-	{"getfwversion", &bleController::parseCmdGetFwVersion, bleController::GET_FW_VERSION},
+bleController::ble_cmd		bleController::cmd_list[] = {
+    {"setlabel", &bleController::parse_cmd_set_label, bleController::SET_LABEL},
+  	{"setlabelinfo", &bleController::parse_cmd_set_label_info, bleController::SET_LABEL_INFO},
+  	{"getlabelinfo", &bleController::parse_cmd_get_label_info, bleController::GET_LABEL_INFO},
+  	{"setrtctime", &bleController::parse_cmd_set_rtc_time, bleController::SET_RTC_TIME},
+  	{"getrtctime", &bleController::parse_cmd_get_rtc_time, bleController::GET_RTC_TIME},
+  	{"start", &bleController::parse_cmd_start_streaming, bleController::START_STREAMING},
+  	{"stop", &bleController::parse_cmd_stop_streaming, bleController::STOP_STREAMING},
+  	{"readconfig", &bleController::parse_cmd_read_config, bleController::READ_CONFIG},
+  	{"setappmode", &bleController::parse_cmd_set_appmode, bleController::SET_APPMODE},
+  	{"getappmode", &bleController::parse_cmd_get_appmode, bleController::GET_APPMODE},
+  	{"setgroundtruth", &bleController::parse_cmd_set_groundtruth, bleController::SET_GROUNDTRUTH},
+  	{"getfwversion", &bleController::parse_cmd_get_fw_version, bleController::GET_FW_VERSION},
 	};
 
-QueueHandle_t 			bleController::msgQueue = nullptr; 
-BLECharacteristic		*bleController::bleCharTx = nullptr, *bleController::bleCharRx = nullptr;
+QueueHandle_t 			bleController::msg_queue = nullptr; 
+BLECharacteristic		*bleController::ble_char_tx = nullptr, *bleController::ble_char_rx = nullptr;
 BLEServer 				*bleController::pServer = nullptr;
 
 /*!
@@ -70,44 +70,44 @@ bleController::bleController(bleCallBack callBack) : _callBack(callBack)
 /*!
  * @brief function to initialize the ble controller
  */
-demoRetCode bleController::begin()
+demo_ret_code bleController::begin()
 {
-	demoRetCode retCode = EDK_OK;
+	demo_ret_code ret_code = EDK_OK;
 	
-	msgQueue = xQueueCreate(BLE_MSG_QUEUE_LEN, sizeof(bleMsg));
+	msg_queue = xQueueCreate(BLE_MSG_QUEUE_LEN, sizeof(ble_msg));
 
 	/* Initialize BLE with Device name */
-    BLEDevice::init("BME688 Development Kit");
-    /* Create Server */
+	BLEDevice::init("BME688 Development Kit");
+	/* Create Server */
 	pServer = BLEDevice::createServer();
 	pServer->setCallbacks(new serverCallbacks());
     
 	/* Create UART Service */
-    BLEService *pService = pServer->createService(SERVICE_UUID);
-    /* add characteristics for transmitting and receiving */
-    bleCharTx = pService->createCharacteristic(
+	BLEService *pService = pServer->createService(SERVICE_UUID);
+	/* add characteristics for transmitting and receiving */
+	ble_char_tx = pService->createCharacteristic(
                         CHARACTERISTIC_UUID_TX,
                         BLECharacteristic::PROPERTY_NOTIFY
                       );         
-    bleCharTx->addDescriptor(new BLE2902());
-	
-    bleCharRx = pService->createCharacteristic(
+	ble_char_tx->addDescriptor(new BLE2902());
+
+	ble_char_rx = pService->createCharacteristic(
 						 CHARACTERISTIC_UUID_RX,
 						 BLECharacteristic::PROPERTY_WRITE
 					   );
-    /* set callback functions */
-    bleCharRx->setCallbacks(this);
-    /* start advertising */
-    pService->start();
-    pServer->getAdvertising()->start();
+	/* set callback functions */
+	ble_char_rx->setCallbacks(this);
+	/* start advertising */
+	pService->start();
+	pServer->getAdvertising()->start();
 	
-	return retCode;
+	return ret_code;
 }
 
 /*!
  * @brief : This function fetches the RTC time which is requested through ble command
  */
-bleController::cmdStatus bleController::parseCmdGetRtcTime(std::stringstream& ss, bleMsg& msg)
+bleController::cmd_status bleController::parse_cmd_get_rtc_time(std::stringstream& ss, ble_msg& msg)
 {
 	return CMD_VALID;
 }
@@ -116,35 +116,37 @@ bleController::cmdStatus bleController::parseCmdGetRtcTime(std::stringstream& ss
  * @brief : This function parses the RTC time received from the ble device and updates
  *        	the RTC time to the ble structure
  */
-bleController::cmdStatus bleController::parseCmdSetRtcTime(std::stringstream& ss, bleMsg& msg)
+bleController::cmd_status bleController::parse_cmd_set_rtc_time(std::stringstream& ss, ble_msg& msg)
 {
 	uint32_t rtc;
+
 	if (ss >> rtc)
 	{
-		msg.rtcTime = rtc;
+		msg.rtc_time = rtc;
 		return CMD_VALID;
 	}
-    return CMD_INVALID;
+	return CMD_INVALID;
 }
 
 /*!
  * @brief : This function updates the received label to the ble structure
  */
-bleController::cmdStatus bleController::parseCmdSetLabel(std::stringstream& ss, bleMsg& msg)
+bleController::cmd_status bleController::parse_cmd_set_label(std::stringstream& ss, ble_msg& msg)
 {
 	uint32_t label;
+
 	if (ss >> label)
 	{
 		msg.label = label;
 		return CMD_VALID;
 	}
-    return CMD_INVALID;
+	return CMD_INVALID;
 }
 
 /*!
  * @brief : This function fetches the current label information
  */
-bleController::cmdStatus bleController::parseCmdGetLabelInfo(std::stringstream& ss, bleMsg& msg)
+bleController::cmd_status bleController::parse_cmd_get_label_info(std::stringstream& ss, ble_msg& msg)
 {
 	return CMD_VALID;
 }
@@ -152,74 +154,80 @@ bleController::cmdStatus bleController::parseCmdGetLabelInfo(std::stringstream& 
 /*!
  * @brief : This function updates the received label information to the ble structure
  */
-bleController::cmdStatus bleController::parseCmdSetLabelInfo(std::stringstream& ss, bleMsg& msg)
+bleController::cmd_status bleController::parse_cmd_set_label_info(std::stringstream& ss, ble_msg& msg)
 {
 	uint32_t label;
-	std::string lblName, lblDesc;
+	std::string lbl_name, lbl_desc;
 
 	if (ss >> label)
 	{
-		msg.labelInfo.label = label;
+		msg.label_info.label = label;
+
 		/* read label name until comma */
-		if (std::getline(ss, lblName, ','))
+		if (std::getline(ss, lbl_name, ','))
 		{
-			lblName.erase(lblName.begin());
-			if (lblName.length() > LABEL_NAME_SIZE)
+			lbl_name.erase(lbl_name.begin());
+
+			if (lbl_name.length() > LABEL_NAME_SIZE)
 			{
 				return MAX_LABEL_NAME_REACHED;
 			}
-			memset(msg.labelInfo.labelName, 0, LABEL_NAME_SIZE+1);
-			strncpy(msg.labelInfo.labelName, lblName.c_str(), LABEL_NAME_SIZE-1);
+			memset(msg.label_info.label_name, 0, (LABEL_NAME_SIZE + 1));
+			strncpy(msg.label_info.label_name, lbl_name.c_str(), (LABEL_NAME_SIZE - 1));
+
 			/* read label description until dot */
-			if(std::getline(ss, lblDesc, '.'))
+			if(std::getline(ss, lbl_desc, '.'))
 			{
-				if (lblDesc.length() > LABEL_DESC_SIZE)
+
+				if (lbl_desc.length() > LABEL_DESC_SIZE)
 				{
 					return MAX_LABEL_DESCRIPTION_REACHED;
 				}
-				memset(msg.labelInfo.labelDesc, 0, LABEL_DESC_SIZE+1);
-				strncpy(msg.labelInfo.labelDesc, lblDesc.c_str(), LABEL_DESC_SIZE-1);
+				memset(msg.label_info.label_desc, 0, (LABEL_DESC_SIZE + 1));
+				strncpy(msg.label_info.label_desc, lbl_desc.c_str(), (LABEL_DESC_SIZE - 1));
 				return CMD_VALID;
 			}
 		}
 	}
-    return CMD_INVALID;
+	return CMD_INVALID;
 }
 
 /*!
  * @brief : This function launches sensor data or sensor data and BSEC output streaming through ble
  *			based on the app mode
  */
-bleController::cmdStatus bleController::parseCmdStartStreaming(std::stringstream& ss, bleMsg& msg)
+bleController::cmd_status bleController::parse_cmd_start_streaming(std::stringstream& ss, ble_msg& msg)
 {
-	int sensorNum, sampleRate, outputId;
-	if (ss >> sensorNum)
+	int32_t sensor_num, sample_rate, output_id;
+
+	if (ss >> sensor_num)
 	{
-		msg.bsec.selectedSensor = static_cast<uint8_t>(sensorNum);
-		if (ss >> sampleRate)
+		msg.bsec.selected_sensor = static_cast<uint8_t>(sensor_num);
+
+		if (ss >> sample_rate)
 		{
-			msg.bsec.sampleRate = static_cast<uint8_t>(sampleRate);
+			msg.bsec.sample_rate = static_cast<uint8_t>(sample_rate);
 			msg.bsec.len = 0;
 			
-			while ((msg.bsec.len < BSEC_NUMBER_OUTPUTS) && (ss >> outputId))
+			while ((msg.bsec.len < BSEC_NUMBER_OUTPUTS) && (ss >> output_id))
 			{
-				msg.bsec.outputId[msg.bsec.len++] = static_cast<uint8_t>(outputId);
+				msg.bsec.output_id[msg.bsec.len++] = static_cast<uint8_t>(output_id);
 			}
 			
-			if (ss >> outputId)
+			if (ss >> output_id)
 			{
 				return BSEC_OUTPUT_EXCESS_ERROR;
 			}	
 			return CMD_VALID;
 		}
 	}
-    return CMD_INVALID;
+  return CMD_INVALID;
 }
 
 /*!
  * @brief : This function stops ble streaming
  */
-bleController::cmdStatus bleController::parseCmdStopStreaming(std::stringstream& ss, bleMsg& msg)
+bleController::cmd_status bleController::parse_cmd_stop_streaming(std::stringstream& ss, ble_msg& msg)
 {
 	return CMD_VALID;
 }
@@ -227,12 +235,13 @@ bleController::cmdStatus bleController::parseCmdStopStreaming(std::stringstream&
 /*!
  * @brief : This function launches the config file data through ble
  */
-bleController::cmdStatus bleController::parseCmdReadConfig(std::stringstream& ss, bleMsg& msg)
+bleController::cmd_status bleController::parse_cmd_read_config(std::stringstream& ss, ble_msg& msg)
 {
-	int fileType;
-	if (ss >> fileType)
+	int32_t file_type;
+
+	if (ss >> file_type)
 	{
-		msg.fileType = static_cast<configFile>(fileType);
+		msg.file_type = static_cast<config_file>(file_type);
 		return CMD_VALID;
 	}
 	return CMD_INVALID;
@@ -241,9 +250,10 @@ bleController::cmdStatus bleController::parseCmdReadConfig(std::stringstream& ss
 /*!
  * @brief : This function updates the current Appmode
  */
-bleController::cmdStatus bleController::parseCmdSetAppmode(std::stringstream& ss, bleMsg& msg)
+bleController::cmd_status bleController::parse_cmd_set_appmode(std::stringstream& ss, ble_msg& msg)
 {
-	int mode;
+	int32_t mode;
+
 	if (ss >> mode)
 	{
 		msg.mode = static_cast<uint8_t>(mode);
@@ -255,7 +265,7 @@ bleController::cmdStatus bleController::parseCmdSetAppmode(std::stringstream& ss
 /*!
  * @brief : This function retrieves the current Appmode through ble
  */
-bleController::cmdStatus bleController::parseCmdGetAppmode(std::stringstream& ss, bleMsg& msg)
+bleController::cmd_status bleController::parse_cmd_get_appmode(std::stringstream& ss, ble_msg& msg)
 {
 	return CMD_VALID;
 }
@@ -264,12 +274,13 @@ bleController::cmdStatus bleController::parseCmdGetAppmode(std::stringstream& ss
 /*!
  * @brief : This function updates the Groundtruth
  */
-bleController::cmdStatus bleController::parseCmdSetGroundtruth(std::stringstream& ss, bleMsg& msg)
+bleController::cmd_status bleController::parse_cmd_set_groundtruth(std::stringstream& ss, ble_msg& msg)
 {
-	int	groundTruth;;
-	if (ss >> groundTruth)
+	int32_t	ground_truth;
+
+	if (ss >> ground_truth)
 	{
-		msg.groundTruth = static_cast<uint32_t>(groundTruth);
+		msg.ground_truth = static_cast<uint32_t>(ground_truth);
 		return CMD_VALID;
 	}
 	return CMD_INVALID;
@@ -278,7 +289,7 @@ bleController::cmdStatus bleController::parseCmdSetGroundtruth(std::stringstream
 /*!
 * @brief : This function retrieves the current firmware version through ble
 */
-bleController::cmdStatus bleController::parseCmdGetFwVersion(std::stringstream& ss, bleMsg& msg)
+bleController::cmd_status bleController::parse_cmd_get_fw_version(std::stringstream& ss, ble_msg& msg)
 {
 	return CMD_VALID;
 }
@@ -289,26 +300,28 @@ bleController::cmdStatus bleController::parseCmdGetFwVersion(std::stringstream& 
  */
 void bleController::onWrite(BLECharacteristic *pCharacteristic)
 {
-    std::string rxValue = pCharacteristic->getValue(), cmdName;
-	std::stringstream ss(rxValue);
-	cmdStatus status = CMD_INVALID;
-	bleMsg msg;
+	std::string rx_value = pCharacteristic->getValue(), cmd_name;
+	std::stringstream ss(rx_value);
+	cmd_status status = CMD_INVALID;
+	ble_msg msg;
 	
-	if (ss >> cmdName)
+	if (ss >> cmd_name)
 	{
 		StaticJsonDocument<BLE_JSON_DOC_SIZE> jsonDoc;
 		
-		for (auto& cmd : cmdList)
+		for (auto& cmd : cmd_list)
 		{
-			if (cmdName == cmd.name)
+
+			if (cmd_name == cmd.name)
 			{
 				status = cmd.parse(ss, msg);
+
 				if (status == CMD_VALID)
 				{
 					msg.name = cmd.name;
 					msg.id = cmd.id;
 					
-					if (xQueueSendFromISR(msgQueue, (const void*)&msg, 0) == pdPASS)
+					if (xQueueSendFromISR(msg_queue, (const void*)&msg, 0) == pdPASS)
 					{
 						return;
 					}
@@ -321,26 +334,26 @@ void bleController::onWrite(BLECharacteristic *pCharacteristic)
 			}
 		}
 		
-		jsonDoc[cmdName.c_str()] = status;
-		sendNotification(jsonDoc);
+		jsonDoc[cmd_name.c_str()] = status;
+		send_notification(jsonDoc);
 	}
 }
 
 /*!
  * @brief : This function checks the ble connection status, restarts advertising if disconnected
  */
-void bleController::checkBleConnectionSts()
+void bleController::check_ble_connection_sts()
 {
 	/* disconnecting */
-    if (!deviceConnected && oldDeviceConnected)
+  if (!device_connected && old_device_connected)
 	{
-        pServer->startAdvertising(); /* restart advertising, when ble is disconnected */
-        oldDeviceConnected = deviceConnected;
-    }
-    /* connecting */
-    if (deviceConnected && !oldDeviceConnected)
+    pServer->startAdvertising(); /* restart advertising, when ble is disconnected */
+    old_device_connected = device_connected;
+  }
+  /* connecting */
+  if (device_connected && !old_device_connected)
 	{
-        oldDeviceConnected = deviceConnected;
+    old_device_connected = device_connected;
 	}
 }
 
@@ -348,17 +361,19 @@ void bleController::checkBleConnectionSts()
  * @brief function dequeues the last received ble message. The ble callBack is
  * 		  called if a new message is available.
  */
-bool bleController::dequeueBleMsg(void)
+bool bleController::dequeue_ble_msg(void)
 {
-	bleMsg msg;
-	if (xQueueReceive(msgQueue, &msg, 0) == pdPASS)
+	ble_msg msg;
+
+	if (xQueueReceive(msg_queue, &msg, 0) == pdPASS)
 	{
 		StaticJsonDocument<BLE_JSON_DOC_SIZE> jsonDoc;
+
 		if (_callBack != nullptr)
 		{
 			_callBack(msg, jsonDoc);
 		
-			sendNotification(jsonDoc);
+			send_notification(jsonDoc);
 		}		
 		return true;
 	}
@@ -368,25 +383,27 @@ bool bleController::dequeueBleMsg(void)
 /*!
  * @brief function to send a json formatted notification
  */
-void bleController::sendNotification(JsonDocument& jsonDoc)
+void bleController::send_notification(JsonDocument& jsonDoc)
 {
 	String notif, msg;
 	
 	serializeJson(jsonDoc, notif);
 	
-	size_t notLen = notif.length(), beginMsg = 0, endMsg = BLE_CONTROLLER_NOTIF_SIZE;
-	while (beginMsg < notLen)
+	size_t not_len = notif.length(), begin_msg = 0, end_msg = BLE_CONTROLLER_NOTIF_SIZE;
+
+	while (begin_msg < not_len)
 	{
-		if (endMsg > notLen)
+
+		if (end_msg > not_len)
 		{
-			endMsg = notLen;
+			end_msg = not_len;
 		}
-		msg = notif.substring(beginMsg, endMsg);
+		msg = notif.substring(begin_msg, end_msg);
 		
-		beginMsg += BLE_CONTROLLER_NOTIF_SIZE;
-		endMsg += BLE_CONTROLLER_NOTIF_SIZE;
+		begin_msg += BLE_CONTROLLER_NOTIF_SIZE;
+		end_msg += BLE_CONTROLLER_NOTIF_SIZE;
 		
-		bleCharTx->setValue((const char*)msg.c_str());
-		bleCharTx->notify();
+		ble_char_tx->setValue((const char*)msg.c_str());
+		ble_char_tx->notify();
 	}
 }

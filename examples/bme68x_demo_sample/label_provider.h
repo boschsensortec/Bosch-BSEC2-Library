@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	label_provider.h
- * @date	11 April 2023
- * @version	2.0.9
+ * @date	04 Dec 2023
+ * @version	2.1.4
  * 
  * @brief	Header file for the label provider
  * 
@@ -48,14 +48,14 @@
 #include <freertos/queue.h>
 
 /* Pins connected to interrupt buttons */
-#define PIN_BUTTON_1 			    32
-#define PIN_BUTTON_2 			    14
-#define LABEL_NAME_SIZE             50
-#define LABEL_DESC_SIZE      	    200
-#define LABEL_TAG_MAX_RANGE         2147483647
-#define LABEL_TAG_MIN_RANGE         1001
+#define PIN_BUTTON_1			UINT8_C(32)
+#define PIN_BUTTON_2 			UINT8_C(14)
+#define LABEL_NAME_SIZE			UINT8_C(50)
+#define LABEL_DESC_SIZE      	UINT8_C(200)
+#define LABEL_TAG_MAX_RANGE   	UINT32_C(2147483647)
+#define LABEL_TAG_MIN_RANGE   	UINT16_C(1001)
 
-enum gasLabel
+enum gas_label
 {
 	BSEC_NO_CLASS,
 	BSEC_CLASS_1,
@@ -71,21 +71,21 @@ class labelProvider
 {
 private:
 	/* variable for temporarily holding the new set user label */
-    static volatile gasLabel _label;
-    /* variables to store information about the current buttons states */
-    static volatile bool _but1Pressed, _but2Pressed;
+	static volatile gas_label _label;
+	/* variables to store information about the current buttons states */
+	static volatile bool _but1_pressed, _but2_pressed;
 	
 	static QueueHandle_t _queue;
 
     /*!
 	 * @brief : This function is the interrupt handler of the first button
 	 */
-    static void isrButton1();
+	static void isr_button1();
 
     /*!
 	 * @brief :  This function is the interrupt handler of the second button
 	 */
-    static void isrButton2();
+	static void isr_button2();
 
 public:
 
@@ -93,7 +93,7 @@ public:
      * @brief : The constructor of the label_provider class
      *          Creates an instance of the class
      */
-    labelProvider();
+	labelProvider();
 	
 	/*!
      * @brief : This function initializes the label provider module
@@ -107,7 +107,7 @@ public:
      * 
      * @return  true if a new label is available else false
 	 */
-    bool getLabel(gasLabel &label);
+	bool get_label(gas_label &label);
 };
 
 #endif

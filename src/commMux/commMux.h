@@ -31,8 +31,8 @@
    POSSIBILITY OF SUCH DAMAGE.
 
    @file    commMux.h
-   @date	11 April 2023
-   @version	2.0.9
+   @date	04 Dec 2023
+   @version	2.1.4
 
 */
 #ifndef COMM_MUX_H
@@ -49,7 +49,7 @@ typedef struct {
    TwoWire *wireobj;
    SPIClass *spiobj;
    uint8_t select;
-} commMux;
+} comm_mux;
 
 /**
  * @brief Function to configure the communication across sensors
@@ -59,14 +59,14 @@ typedef struct {
  * @param comm    : Structure for selected sensor
  * @return        : Structure holding the communication setup
  */
-commMux commMuxSetConfig(TwoWire &wireobj, SPIClass &spiobj, uint8_t idx, commMux &comm);
+comm_mux comm_mux_set_config(TwoWire &wireobj, SPIClass &spiobj, uint8_t idx, comm_mux &comm);
 
 /**
  * @brief Function to trigger the communication
  * @param wireobj : The TwoWire object
  * @param spiobj  : The SPIClass object
  */
-void commMuxBegin(TwoWire &wireobj, SPIClass &spiobj);
+void comm_mux_begin(TwoWire &wireobj, SPIClass &spiobj);
 
 /**
  * @brief Function to write the sensor data to the register
@@ -76,7 +76,7 @@ void commMuxBegin(TwoWire &wireobj, SPIClass &spiobj);
  * @param intf_ptr : Pointer to the interface descriptor
  * @return 0 if successful, non-zero otherwise
  */
-int8_t commMuxWrite(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr);
+int8_t comm_mux_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr);
 
 /**
  * @brief Function to read the sensor data from the register
@@ -86,13 +86,13 @@ int8_t commMuxWrite(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, 
  * @param intf_ptr : Pointer to the interface descriptor
  * @return 0 if successful, non-zero otherwise
  */
-int8_t commMuxRead(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr);
+int8_t comm_mux_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr);
 
 /**
  * @brief Function to maintain a delay between communication
  * @param period_us   : Time delay in micro secs
  * @param intf_ptr    : Pointer to the interface descriptor
  */
-void commMuxDelay(uint32_t period_us, void *intf_ptr);
+void comm_mux_delay(uint32_t period_us, void *intf_ptr);
 
 #endif /* COMM_MUX_H */
