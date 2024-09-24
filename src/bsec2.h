@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	bsec2.h
- * @date	04 Dec 2023
- * @version	2.1.4
+ * @date	18 July 2024
+ * @version	2.1.5
  *
  */
 
@@ -57,6 +57,13 @@
 #define BSEC_TOTAL_HEAT_DUR                 UINT16_C(140)
 #define BSEC_INSTANCE_SIZE                  3272
 #define BSEC_E_INSUFFICIENT_INSTANCE_SIZE   (bsec_library_return_t)-105
+
+/*
+ *	The default offset provided has been determined by testing the sensor in LP and ULP mode on application board 3.0
+ *	Please update the offset value after testing this on your product 
+ */
+#define TEMP_OFFSET_LP		(1.3255f)
+#define TEMP_OFFSET_ULP		(0.466f)
 
 typedef bsec_output_t bsecData;
 typedef bsec_virtual_sensor_t bsecSensor;

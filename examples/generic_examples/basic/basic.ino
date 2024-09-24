@@ -24,6 +24,8 @@
 #define PANIC_LED   LED_BUILTIN
 #define ERROR_DUR   1000
 
+#define SAMPLE_RATE		BSEC_SAMPLE_RATE_ULP
+
 /* Helper functions declarations */
 /**
  * @brief : This function toggles the led when a fault was detected
@@ -58,7 +60,14 @@ void setup(void)
             BSEC_OUTPUT_RAW_HUMIDITY,
             BSEC_OUTPUT_RAW_GAS,
             BSEC_OUTPUT_STABILIZATION_STATUS,
-            BSEC_OUTPUT_RUN_IN_STATUS
+            BSEC_OUTPUT_RUN_IN_STATUS,
+            BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE,
+            BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY,
+            BSEC_OUTPUT_STATIC_IAQ,
+            BSEC_OUTPUT_CO2_EQUIVALENT,
+            BSEC_OUTPUT_BREATH_VOC_EQUIVALENT,
+            BSEC_OUTPUT_GAS_PERCENTAGE,
+            BSEC_OUTPUT_COMPENSATED_GAS
     };
 
     /* Initialize the communication interfaces */
@@ -74,9 +83,22 @@ void setup(void)
     {
         checkBsecStatus(envSensor);
     }
+	
+	/*
+	 *	The default offset provided has been determined by testing the sensor in LP and ULP mode on application board 3.0
+	 *	Please update the offset value after testing this on your product 
+	 */
+	if (SAMPLE_RATE == BSEC_SAMPLE_RATE_ULP)
+	{
+		envSensor.setTemperatureOffset(TEMP_OFFSET_ULP);
+	}
+	else if (SAMPLE_RATE == BSEC_SAMPLE_RATE_LP)
+	{
+		envSensor.setTemperatureOffset(TEMP_OFFSET_LP);
+	}
 
-    /* Subscribe to the desired BSEC2 outputs */
-    if (!envSensor.updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_ULP))
+    /* Subsribe to the desired BSEC2 outputs */
+    if (!envSensor.updateSubscription(sensorList, ARRAY_LEN(sensorList), SAMPLE_RATE))
     {
         checkBsecStatus(envSensor);
     }
@@ -122,33 +144,54 @@ void newDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bse
         return;
     }
 
-    Serial.println("BSEC outputs:\n\ttimestamp = " + String((int) (outputs.output[0].time_stamp / INT64_C(1000000))));
+    Serial.println("BSEC outputs:\n\tTime stamp = " + String((int) (outputs.output[0].time_stamp / INT64_C(1000000))));
     for (uint8_t i = 0; i < outputs.nOutputs; i++)
     {
         const bsecData output  = outputs.output[i];
         switch (output.sensor_id)
         {
             case BSEC_OUTPUT_IAQ:
-                Serial.println("\tiaq = " + String(output.signal));
-                Serial.println("\tiaq accuracy = " + String((int) output.accuracy));
+                Serial.println("\tIAQ = " + String(output.signal));
+                Serial.println("\tIAQ accuracy = " + String((int) output.accuracy));
                 break;
             case BSEC_OUTPUT_RAW_TEMPERATURE:
-                Serial.println("\ttemperature = " + String(output.signal));
+                Serial.println("\tTemperature = " + String(output.signal));
                 break;
             case BSEC_OUTPUT_RAW_PRESSURE:
-                Serial.println("\tpressure = " + String(output.signal));
+                Serial.println("\tPressure = " + String(output.signal));
                 break;
             case BSEC_OUTPUT_RAW_HUMIDITY:
-                Serial.println("\thumidity = " + String(output.signal));
+                Serial.println("\tHumidity = " + String(output.signal));
                 break;
             case BSEC_OUTPUT_RAW_GAS:
-                Serial.println("\tgas resistance = " + String(output.signal));
+                Serial.println("\tGas resistance = " + String(output.signal));
                 break;
             case BSEC_OUTPUT_STABILIZATION_STATUS:
-                Serial.println("\tstabilization status = " + String(output.signal));
+                Serial.println("\tStabilization status = " + String(output.signal));
                 break;
             case BSEC_OUTPUT_RUN_IN_STATUS:
-                Serial.println("\trun in status = " + String(output.signal));
+                Serial.println("\tRun in status = " + String(output.signal));
+                break;
+            case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE:
+                Serial.println("\tCompensated temperature = " + String(output.signal));
+                break;
+            case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY:
+                Serial.println("\tCompensated humidity = " + String(output.signal));
+                break;
+            case BSEC_OUTPUT_STATIC_IAQ:
+                Serial.println("\tStatic IAQ = " + String(output.signal));
+                break;
+            case BSEC_OUTPUT_CO2_EQUIVALENT:
+                Serial.println("\tCO2 Equivalent = " + String(output.signal));
+                break;
+            case BSEC_OUTPUT_BREATH_VOC_EQUIVALENT:
+                Serial.println("\tbVOC equivalent = " + String(output.signal));
+                break;
+            case BSEC_OUTPUT_GAS_PERCENTAGE:
+                Serial.println("\tGas percentage = " + String(output.signal));
+                break;
+            case BSEC_OUTPUT_COMPENSATED_GAS:
+                Serial.println("\tCompensated gas = " + String(output.signal));
                 break;
             default:
                 break;

@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	    bsec_datalogger.cpp
- * @date		04 Dec 2023
- * @version		2.1.4
+ * @date		03 Jan 2024
+ * @version		2.1.5
  * 
  * @brief    	bsec_datalogger
  *
@@ -857,34 +857,26 @@ demo_ret_code bsecDataLogger::write_bsec_output(sensor_io_data& buff_data)
 		{
 			const bsec_output_t& output = (buff_data.outputs).output[i];
 
-			switch (output.sensor_id)
+			if (output.sensor_id >= BSEC_OUTPUT_GAS_ESTIMATE_1 && output.sensor_id <= BSEC_OUTPUT_GAS_ESTIMATE_4)
 			{
-				case BSEC_OUTPUT_GAS_ESTIMATE_1:
-				case BSEC_OUTPUT_GAS_ESTIMATE_2:
-				case BSEC_OUTPUT_GAS_ESTIMATE_3:
-				case BSEC_OUTPUT_GAS_ESTIMATE_4:
-					index = output.sensor_id - BSEC_OUTPUT_GAS_ESTIMATE_1;
-					gas_signal[index] = output.signal;
-					gas_accuracy[index] = (output.accuracy > gas_accuracy[index]) ? gas_accuracy[index] : output.accuracy;
-					Gas_accuracy |= ((gas_accuracy[index] & 0x03) << (index * 2));
-					is_reg_class_subscribe = 1;
-				break;
-				case BSEC_OUTPUT_REGRESSION_ESTIMATE_1:
-				case BSEC_OUTPUT_REGRESSION_ESTIMATE_2:
-				case BSEC_OUTPUT_REGRESSION_ESTIMATE_3:
-				case BSEC_OUTPUT_REGRESSION_ESTIMATE_4:
-					index = output.sensor_id -  BSEC_OUTPUT_REGRESSION_ESTIMATE_1;
-					gas_signal[index] = output.signal;
-					gas_accuracy[index] = (output.accuracy > gas_accuracy[index]) ? gas_accuracy[index] : output.accuracy;
-					Gas_accuracy |= ((gas_accuracy[index] & 0x03) << (index * 2));
-					is_reg_class_subscribe = 1;
-				break;
-				case BSEC_OUTPUT_IAQ:
-					iaq_signal = output.signal;
-					iaq_accuracy = output.accuracy;
-				break;
-				default:
-				break;
+				index = output.sensor_id - BSEC_OUTPUT_GAS_ESTIMATE_1;
+				gas_signal[index] = output.signal;
+				gas_accuracy[index] = (output.accuracy > gas_accuracy[index]) ? gas_accuracy[index] : output.accuracy;
+				Gas_accuracy |= ((gas_accuracy[index] & 0x03) << (index * 2));
+				is_reg_class_subscribe = 1;
+			}
+			else if (output.sensor_id >= BSEC_OUTPUT_REGRESSION_ESTIMATE_1 && output.sensor_id <= BSEC_OUTPUT_REGRESSION_ESTIMATE_4)
+			{
+				index = output.sensor_id -  BSEC_OUTPUT_REGRESSION_ESTIMATE_1;
+				gas_signal[index] = output.signal;
+				gas_accuracy[index] = (output.accuracy > gas_accuracy[index]) ? gas_accuracy[index] : output.accuracy;
+				Gas_accuracy |= ((gas_accuracy[index] & 0x03) << (index * 2));
+				is_reg_class_subscribe = 1;
+			}
+			else if(output.sensor_id == BSEC_OUTPUT_IAQ)
+			{
+				iaq_signal = output.signal;
+				iaq_accuracy = output.accuracy;
 			}
 		}
 

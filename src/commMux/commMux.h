@@ -31,8 +31,8 @@
    POSSIBILITY OF SUCH DAMAGE.
 
    @file    commMux.h
-   @date	04 Dec 2023
-   @version	2.1.4
+   @date	18 Jul 2024
+   @version	2.1.5
 
 */
 #ifndef COMM_MUX_H

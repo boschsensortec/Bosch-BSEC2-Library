@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	bsec2.cpp
- * @date	04 Dec 2023
- * @version	2.1.4
+ * @date	18 July 2024
+ * @version	2.1.5
  *
  */
 
@@ -48,7 +48,7 @@ Bsec2::Bsec2(void)
     ovfCounter = 0;
     lastMillis = 0;
     status = BSEC_OK;
-    extTempOffset = 0.0f;
+	extTempOffset = 0.0f;
     opMode = BME68X_SLEEP_MODE;
     newDataCallback = nullptr;
     bsecInstance = nullptr;
