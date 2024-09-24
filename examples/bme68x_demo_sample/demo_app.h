@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	demo_app.h
- * @date	04 Dec 2023
- * @version	2.1.4
+ * @date	03 Jan 2024
+ * @version	2.1.5
  * 
  * @brief	Header file for the bosch application definitions
  * 
@@ -44,7 +44,7 @@
 
 #include "bsec2.h"
 
-#define FIRMWARE_VERSION 		"2.1.4"
+#define FIRMWARE_VERSION 		"2.1.5"
 
 /*!
  * @brief Enumeration for demo app mode

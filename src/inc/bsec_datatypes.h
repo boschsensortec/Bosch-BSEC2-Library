@@ -85,8 +85,8 @@ extern "C"
 
 #define BSEC_MAX_WORKBUFFER_SIZE     (4096)    /*!< Maximum size (in bytes) of the work buffer */
 #define BSEC_MAX_PHYSICAL_SENSOR     (8)         /*!< Number of physical sensors that need allocated space before calling bsec_update_subscription() */
-#define BSEC_MAX_PROPERTY_BLOB_SIZE  (2063)     /*!< Maximum size (in bytes) of the data blobs returned by bsec_get_configuration() */
-#define BSEC_MAX_STATE_BLOB_SIZE     (221)        /*!< Maximum size (in bytes) of the data blobs returned by bsec_get_state()*/
+#define BSEC_MAX_PROPERTY_BLOB_SIZE  (1943)     /*!< Maximum size (in bytes) of the data blobs returned by bsec_get_configuration() */
+#define BSEC_MAX_STATE_BLOB_SIZE     (238)        /*!< Maximum size (in bytes) of the data blobs returned by bsec_get_state()*/
 #define BSEC_SAMPLE_RATE_DISABLED    (65535.0f)      /*!< Sample rate of a disabled sensor */
 #define BSEC_SAMPLE_RATE_ULP         (0.0033333f)           /*!< Sample rate in case of Ultra Low Power Mode */
 #define BSEC_SAMPLE_RATE_CONT        (1.0f)          /*!< Sample rate in case of Continuous Mode */
@@ -247,8 +247,8 @@ typedef enum
     /**
      * @brief Gas sensor run-in status [boolean]
      *
-     * Indicates power-on stabilization status of the gas sensor element: stabilization is ongoing (0) or stabilization 
-     * is finished (1).
+     * Dynamicaly tracks the power-on stabilization of the gas sensor element: stabilization is ongoing (0) or stabilization 
+     * is finished (1). It depends on how long the sensor has been turn off. A power-on conditioning has been employed for early stabilization of BME sensors.
      */
     BSEC_OUTPUT_RUN_IN_STATUS = 13,                         
 
@@ -259,12 +259,12 @@ typedef enum
      * The self heating introduced by the heater is depending on the sensor operation mode and the sensor supply voltage. 
      * 
      * 
-     * @note IAQ solution: In addition, the temperature output can be compensated by an user defined value 
+     * @note In addition, the temperature output can be compensated by an user defined value 
      * (::BSEC_INPUT_HEATSOURCE in degrees Celsius), which represents the device specific self-heating.
      * 
      * Thus, the value is calculated as follows:
-     * * IAQ solution: ```BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE = ::BSEC_INPUT_TEMPERATURE -  function(sensor operation mode, sensor supply voltage) - ::BSEC_INPUT_HEATSOURCE```
-     * * other solutions: ```::BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE = ::BSEC_INPUT_TEMPERATURE -  function(sensor operation mode, sensor supply voltage)```
+     * * ```BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE = ::BSEC_INPUT_TEMPERATURE -  function(sensor operation mode, sensor supply voltage) - ::BSEC_INPUT_HEATSOURCE```
+     * 
      *
      * The self-heating in operation mode BSEC_SAMPLE_RATE_ULP is negligible.
      * The self-heating in operation mode BSEC_SAMPLE_RATE_LP is supported for 1.8V by default (no config file required). If the BME68x sensor supply voltage is 3.3V, the corresponding config file shall be used.
@@ -274,16 +274,25 @@ typedef enum
     /**
      * @brief Sensor heat compensated humidity [%] 
      * 
-     * Relative measured by BME68x which is compensated for the influence of sensor (heater) in %.
+     * Relative humidity measured by BME68x which is compensated for the influence of sensor (heater) in %.
      * 
      * It converts the ::BSEC_INPUT_HUMIDITY from temperature ::BSEC_INPUT_TEMPERATURE to temperature 
      * ::BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE.
      * 
-     * @note IAQ solution: If ::BSEC_INPUT_HEATSOURCE is used for device specific temperature compensation, it will be 
+     * @note If ::BSEC_INPUT_HEATSOURCE is used for device specific temperature compensation, it will be 
      * effective for ::BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY too.
      */
     BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY = 15,    
 
+	
+	/**
+	* @brief Raw gas resistance compensated by temperature and humidity influences [ohm].
+	* 
+	* The effect of temperature and humidity on the gas resistance is eleminated to a good extend and it is further linearized
+	* to log scale for estimation of the compensated gas resistance.
+	*
+	*/
+    BSEC_OUTPUT_COMPENSATED_GAS = 18,
 	BSEC_OUTPUT_GAS_PERCENTAGE = 21,                        /*!< Percentage of min and max filtered gas value [%] */
 	
     /**

@@ -224,7 +224,7 @@ void newDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bse
     if (!outputs.nOutputs)
         return;
 
-    Serial.println("BSEC outputs:\n\ttimestamp = " + String((int) (outputs.output[0].time_stamp / INT64_C(1000000))));
+    Serial.println("BSEC outputs:\n\tTime stamp = " + String((int) (outputs.output[0].time_stamp / INT64_C(1000000))));
     uint8_t index = 0;
 	
     for (uint8_t i = 0; i < outputs.nOutputs; i++)
@@ -233,25 +233,25 @@ void newDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bse
         switch (output.sensor_id)
         {
             case BSEC_OUTPUT_RAW_TEMPERATURE:
-                Serial.println("\ttemperature = " + String(output.signal));
+                Serial.println("\tTemperature = " + String(output.signal));
                 break;
             case BSEC_OUTPUT_RAW_PRESSURE:
-                Serial.println("\tpressure = " + String(output.signal));
+                Serial.println("\tPressure = " + String(output.signal));
                 break;
             case BSEC_OUTPUT_RAW_HUMIDITY:
-                Serial.println("\thumidity = " + String(output.signal));
+                Serial.println("\tHumidity = " + String(output.signal));
                 break;
             case BSEC_OUTPUT_RAW_GAS:
-                Serial.println("\tgas resistance = " + String(output.signal));
+                Serial.println("\tGas resistance = " + String(output.signal));
                 break;
             case BSEC_OUTPUT_RAW_GAS_INDEX:
-                Serial.println("\tgas index = " + String(output.signal));
+                Serial.println("\tGas index = " + String(output.signal));
                 break;
             case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE:
-                Serial.println("\tcompensated temperature = " + String(output.signal));
+                Serial.println("\tCompensated temperature = " + String(output.signal));
                 break;
             case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY:
-                Serial.println("\tcompensated humidity = " + String(output.signal));
+                Serial.println("\tCompensated humidity = " + String(output.signal));
                 break;
             case BSEC_OUTPUT_GAS_ESTIMATE_1:
             case BSEC_OUTPUT_GAS_ESTIMATE_2:
@@ -260,9 +260,9 @@ void newDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bse
                 index = (output.sensor_id - BSEC_OUTPUT_GAS_ESTIMATE_1);
                 if (index == 0) // The four classes are updated from BSEC with same accuracy, thus printing is done just once.
                 {
-                  Serial.println("\taccuracy = " + String(output.accuracy));
+                  Serial.println("\tAccuracy = " + String(output.accuracy));
                 }
-                Serial.println("\tclass " + String(index + 1) + " probability : " + String(output.signal * 100) + "%");
+                Serial.println("\tClass " + String(index + 1) + " probability = " + String(output.signal * 100) + "%");
                 break;
             case BSEC_OUTPUT_REGRESSION_ESTIMATE_1:
             case BSEC_OUTPUT_REGRESSION_ESTIMATE_2:
@@ -271,9 +271,9 @@ void newDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bse
                 index = (output.sensor_id - BSEC_OUTPUT_REGRESSION_ESTIMATE_1);
                 if (index == 0) // The four targets are updated from BSEC with same accuracy, thus printing is done just once.
                 {
-                  Serial.println("\taccuracy = " + String(output.accuracy));
+                  Serial.println("\tAccuracy = " + String(output.accuracy));
                 }
-                Serial.println("\ttarget " + String(index + 1) + " : " + String(output.signal * 100));
+                Serial.println("\tTarget " + String(index + 1) + " = " + String(output.signal * 100));
                 break;
             default:
                 break;

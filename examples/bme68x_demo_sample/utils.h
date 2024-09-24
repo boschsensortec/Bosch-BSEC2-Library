@@ -31,8 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @file	utils.h
- * @date	04 Dec 2023
- * @version	2.1.4
+ * @date	03 Jan 2024
+ * @version	2.1.5
  * 
  * @brief	Header file for the datalogger utils
  * 
