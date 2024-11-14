@@ -11,7 +11,7 @@
     "name": "Bosch Sensortec",
     "email": "contact@bosch-sensortec.com"
   },
-  "frameworks": "arduino",
+  "frameworks": "*",
   "platforms": "*",
   "build": {
     "includeDir": "src/inc",

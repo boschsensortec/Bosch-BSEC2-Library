@@ -40,9 +40,11 @@
 #define BSEC2_H_
 
 /* Includes */
+#ifdef ARDUINO
 #include "Arduino.h"
 #include "Wire.h"
 #include "SPI.h"
+#endif
 
 /* dependent library header */
 #include "bme68xLibrary.h"
@@ -94,6 +96,20 @@ public:
      * @param read     : Read callback
      * @param write    : Write callback
      * @param idleTask : Delay or Idle function
+     * @param millis : Function to get current time in milliseconds
+     * @param intfPtr : Pointer to the interface descriptor
+     * @return True if everything initialized correctly
+     */
+    bool begin(bme68xIntf intf, bme68x_read_fptr_t read, bme68x_write_fptr_t write,
+            bme68x_delay_us_fptr_t idleTask, void *intfPtr, uint32_t (*millis)());
+
+#ifdef ARDUINO
+    /**
+     * @brief Function to initialize the sensor based on custom callbacks
+     * @param intf     : BME68X_SPI_INTF or BME68X_I2C_INTF interface
+     * @param read     : Read callback
+     * @param write    : Write callback
+     * @param idleTask : Delay or Idle function
      * @param intfPtr : Pointer to the interface descriptor
      * @return True if everything initialized correctly
      */
@@ -117,6 +133,7 @@ public:
      * @return True if everything initialized correctly
      */
     bool begin(uint8_t chipSelect, SPIClass &spi, bme68x_delay_us_fptr_t idleTask = bme68xDelayUs);
+#endif
 
     /**
      * @brief Function that sets the desired sensors and the sample rates
@@ -233,6 +250,8 @@ private:
      */
     uint32_t ovfCounter;
     
+    uint32_t (*bsecMillis)();
+
     uint32_t lastMillis;
     /* Pointer to hold the address of the instance */
     uint8_t *bsecInstance;

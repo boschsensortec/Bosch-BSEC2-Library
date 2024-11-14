@@ -35,7 +35,7 @@
  @version 2.1.5
 
  */
-
+#ifdef ARDUINO
 #include "commMux.h"
 
 #define CLOCK_FREQUENCY 	UINT32_C(400000)
@@ -155,3 +155,4 @@ void comm_mux_delay(uint32_t period_us, void *intf_ptr)
 	(void) intf_ptr;
 	delayMicroseconds(period_us);
 }
+#endif
