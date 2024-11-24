@@ -62,7 +62,7 @@ Bsec2::Bsec2(void)
  * @brief Function to initialize the sensor based on custom callbacks
  */
 bool Bsec2::begin(bme68xIntf intf, bme68x_read_fptr_t read, bme68x_write_fptr_t write,
-        bme68x_delay_us_fptr_t idleTask, void *intfPtr, uint32_t (*millis)())
+        bme68x_delay_us_fptr_t idleTask, void *intfPtr, unsigned long (*millis)())
 {
     bsecMillis = millis;
     sensor.begin(intf, read, write, idleTask, intfPtr);

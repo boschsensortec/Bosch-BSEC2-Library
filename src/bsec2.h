@@ -101,7 +101,7 @@ public:
      * @return True if everything initialized correctly
      */
     bool begin(bme68xIntf intf, bme68x_read_fptr_t read, bme68x_write_fptr_t write,
-            bme68x_delay_us_fptr_t idleTask, void *intfPtr, uint32_t (*millis)());
+            bme68x_delay_us_fptr_t idleTask, void *intfPtr, unsigned long (*millis)());
 
 #ifdef ARDUINO
     /**
@@ -250,7 +250,7 @@ private:
      */
     uint32_t ovfCounter;
     
-    uint32_t (*bsecMillis)();
+    unsigned long (*bsecMillis)();
 
     uint32_t lastMillis;
     /* Pointer to hold the address of the instance */
