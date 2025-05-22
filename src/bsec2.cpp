@@ -62,8 +62,25 @@ Bsec2::Bsec2(void)
  * @brief Function to initialize the sensor based on custom callbacks
  */
 bool Bsec2::begin(bme68xIntf intf, bme68x_read_fptr_t read, bme68x_write_fptr_t write,
+        bme68x_delay_us_fptr_t idleTask, void *intfPtr, unsigned long (*millis)())
+{
+    bsecMillis = millis;
+    sensor.begin(intf, read, write, idleTask, intfPtr);
+
+    if (sensor.checkStatus() == BME68X_ERROR)
+        return false;
+
+    return beginCommon();
+}
+
+#ifdef ARDUINO
+/**
+ * @brief Function to initialize the sensor based on custom callbacks
+ */
+bool Bsec2::begin(bme68xIntf intf, bme68x_read_fptr_t read, bme68x_write_fptr_t write,
         bme68x_delay_us_fptr_t idleTask, void *intfPtr)
 {
+    bsecMillis = millis;
     sensor.begin(intf, read, write, idleTask, intfPtr);
 
     if (sensor.checkStatus() == BME68X_ERROR)
@@ -77,6 +94,7 @@ bool Bsec2::begin(bme68xIntf intf, bme68x_read_fptr_t read, bme68x_write_fptr_t 
  */ 
 bool Bsec2::begin(uint8_t i2cAddr, TwoWire &i2c, bme68x_delay_us_fptr_t idleTask)
 {
+    bsecMillis = millis;
     sensor.begin(i2cAddr, i2c, idleTask);
 
     if (sensor.checkStatus() == BME68X_ERROR)
@@ -90,6 +108,7 @@ bool Bsec2::begin(uint8_t i2cAddr, TwoWire &i2c, bme68x_delay_us_fptr_t idleTask
  */
 bool Bsec2::begin(uint8_t chipSelect, SPIClass &spi, bme68x_delay_us_fptr_t idleTask)
 {
+    bsecMillis = millis;
     sensor.begin(chipSelect, spi, idleTask);
 
     if (sensor.checkStatus() == BME68X_ERROR)
@@ -97,6 +116,7 @@ bool Bsec2::begin(uint8_t chipSelect, SPIClass &spi, bme68x_delay_us_fptr_t idle
 
     return beginCommon();
 }
+#endif
 
 /**
  * @brief Function to request/subscribe for desired virtual outputs with the supported sample rates
@@ -251,7 +271,7 @@ bool Bsec2::setConfig(const uint8_t *config)
  */
 int64_t Bsec2::getTimeMs(void)
 {
-    int64_t timeMs = millis();
+    int64_t timeMs = bsecMillis();
 
     if (lastMillis > timeMs) /* An overflow occurred */
     { 

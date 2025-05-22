@@ -35,6 +35,7 @@
    @version	2.1.5
 
 */
+#ifdef ARDUINO
 #ifndef COMM_MUX_H
 #define COMM_MUX_H
 
@@ -96,3 +97,4 @@ int8_t comm_mux_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void 
 void comm_mux_delay(uint32_t period_us, void *intf_ptr);
 
 #endif /* COMM_MUX_H */
+#endif
