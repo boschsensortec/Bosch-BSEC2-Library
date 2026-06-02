@@ -55,9 +55,14 @@ Advantages
 
 ## Software license agreement
 
-The BSEC software is only available for download or use after accepting the software license agreement. By using this library, you have agreed to the terms of the license agreement.
+The BSEC software (listed below) is only available for download or use after accepting the software license agreement. By using this library, you have agreed to the terms of the license agreement.
 
-[BSEC license agreement](https://www.bosch-sensortec.com/media/boschsensortec/downloads/software/bme688_development_software/2023_04/license_terms_bme688_bme680_bsec.pdf)
+[BSEC license agreement](https://www.bosch-sensortec.com/media/boschsensortec/downloads/software/bme688_development_software/2024_12/20241219_clickthrough_license_terms_bsec_bme680_bme688_bme690.pdf)
+
+The contents within these directories are covered by the aforementioned BSEC License agreement
+- src/config
+- src/inc
+- all pre-compiled binary blobs
 
 ## Installation and getting started
 
