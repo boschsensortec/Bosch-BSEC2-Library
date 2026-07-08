@@ -7,7 +7,7 @@
 **Usage** : Arduino Library and examples for the BSEC 2.x software library for the BME68x family of sensors
 
 > The binaries redistributed as part of this repository are licensed under the [License Terms and Conditions for the use of Bosch Sensortec GmbH, 
-Reutlingen, BME688 Software (esp. BME AI-Studio & BSEC 2.x)](https://www.bosch-sensortec.com/media/boschsensortec/downloads/software/bme688_development_software/2023_04/license_terms_bme688_bme680_bsec.pdf)
+Reutlingen, BME680, BME688, BME690 Software (BSEC 2.x)](https://www.bosch-sensortec.com/media/boschsensortec/downloads/software/bme688_development_software/2024_12/20241219_clickthrough_license_terms_bsec_bme680_bme688_bme690.pdf)
 
 >The examples and Arduino library are licensed under the BSD-3-Clause license.
 >
