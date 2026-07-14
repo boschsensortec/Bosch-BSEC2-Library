@@ -1,0 +1,353 @@
+#include <Wire.h>
+#include <bsec2.h>
+#include <WiFi.h>
+#include <WebServer.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
+
+#define PANIC_LED 2 // Replace with your actual LED pin if different
+
+/* Sample rate for BSEC */
+#define SAMPLE_RATE BSEC_SAMPLE_RATE_LP
+
+/* Create an object of the class Bsec2 */
+Bsec2 envSensor;
+
+// WiFi credentials
+const char* ssid = "HUAWEI 4G";
+const char* password = "xxxx";
+
+// Web server on port 80
+WebServer server(80);
+
+// NTP Client setup
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "pool.ntp.org", 3 * 3600); // GMT +3
+
+// Variables to store sensor data
+float iaq = 0.0;
+float static_iaq = 0.0;
+float co2_equivalent = 0.0;
+float bVOC_equivalent = 0.0;
+float raw_temperature = 0.0;
+float raw_pressure = 0.0;
+float raw_humidity = 0.0;
+float raw_gas_resistance = 0.0;
+float stabilization_status = 0.0;
+float run_in_status = 0.0;
+float compensated_temperature = 0.0;
+float compensated_humidity = 0.0;
+float compensated_gas_resistance = 0.0;
+float gas_percentage = 0.0;
+
+// Uptime variable
+unsigned long uptime = 0;
+
+/**
+ * Helper function to check and handle BSEC status
+ */
+void checkBsecStatus(Bsec2 bsec) {
+    if (bsec.status < BSEC_OK) {
+        Serial.println("BSEC error code : " + String(bsec.status));
+    } else if (bsec.status > BSEC_OK) {
+        Serial.println("BSEC warning code : " + String(bsec.status));
+    }
+
+    if (bsec.sensor.status < BME68X_OK) {
+        Serial.println("BME68X error code : " + String(bsec.sensor.status));
+    } else if (bsec.sensor.status > BME68X_OK) {
+        Serial.println("BME68X warning code : " + String(bsec.sensor.status));
+    }
+}
+
+/**
+ * Callback function called when new data is available
+ */
+void newDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bsec) {
+    if (!outputs.nOutputs) {
+        return;
+    }
+
+    for (uint8_t i = 0; i < outputs.nOutputs; i++) {
+        const bsecData output = outputs.output[i];
+        
+        switch (output.sensor_id) {
+            case BSEC_OUTPUT_IAQ:
+                iaq = output.signal;
+                break;
+            
+            case BSEC_OUTPUT_STATIC_IAQ:
+                static_iaq = output.signal;
+                break;
+
+            case BSEC_OUTPUT_CO2_EQUIVALENT:
+                co2_equivalent = output.signal;
+                break;
+
+            case BSEC_OUTPUT_BREATH_VOC_EQUIVALENT:
+                bVOC_equivalent = output.signal;
+                break;
+
+            case BSEC_OUTPUT_RAW_TEMPERATURE:
+                raw_temperature = output.signal;
+                break;
+
+            case BSEC_OUTPUT_RAW_PRESSURE:
+                raw_pressure = output.signal;
+                break;
+
+            case BSEC_OUTPUT_RAW_HUMIDITY:
+                raw_humidity = output.signal;
+                break;
+
+            case BSEC_OUTPUT_RAW_GAS:
+                raw_gas_resistance = output.signal;
+                break;
+
+            case BSEC_OUTPUT_STABILIZATION_STATUS:
+                stabilization_status = output.signal;
+                break;
+
+            case BSEC_OUTPUT_RUN_IN_STATUS:
+                run_in_status = output.signal;
+                break;
+
+            case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE:
+                compensated_temperature = output.signal;
+                break;
+
+            case BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY:
+                compensated_humidity = output.signal;
+                break;
+
+            case BSEC_OUTPUT_COMPENSATED_GAS:
+                compensated_gas_resistance = output.signal;
+                break;
+
+            case BSEC_OUTPUT_GAS_PERCENTAGE:
+                gas_percentage = output.signal;
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    Serial.println("BSEC outputs:");
+    Serial.print("\tIAQ: ");
+    Serial.println(iaq);
+    Serial.print("\tStatic IAQ: ");
+    Serial.println(static_iaq);
+    Serial.print("\tCO2 Equivalent: ");
+    Serial.println(co2_equivalent);
+    Serial.print("\tbVOC Equivalent: ");
+    Serial.println(bVOC_equivalent);
+    Serial.print("\tRaw Temperature: ");
+    Serial.println(raw_temperature);
+    Serial.print("\tRaw Pressure: ");
+    Serial.println(raw_pressure);
+    Serial.print("\tRaw Humidity: ");
+    Serial.println(raw_humidity);
+    Serial.print("\tRaw Gas Resistance: ");
+    Serial.println(raw_gas_resistance);
+    Serial.print("\tStabilization Status: ");
+    Serial.println(stabilization_status);
+    Serial.print("\tRun-in Status: ");
+    Serial.println(run_in_status);
+    Serial.print("\tCompensated Temperature: ");
+    Serial.println(compensated_temperature);
+    Serial.print("\tCompensated Humidity: ");
+    Serial.println(compensated_humidity);
+    Serial.print("\tCompensated Gas Resistance: ");
+    Serial.println(compensated_gas_resistance);
+    Serial.print("\tGas Percentage: ");
+    Serial.println(gas_percentage);
+}
+
+/**
+ * Handle root URL to serve the web page
+ */
+void handleRoot() {
+    String html = "<!DOCTYPE html><html lang='en'><head>";
+    html += "<meta charset='UTF-8'>";
+    html += "<meta name='viewport' content='width=device-width, initial-scale=1.0'>";
+    html += "<title>ESP32-C6 BME680 Sensor Data</title>";
+    html += "<style>";
+    html += "body { font-family: Arial, sans-serif; background-color: #f4f4f9; color: #333; margin: 0; padding: 0; }";
+    html += "header { background-color: #2c3e50; color: white; text-align: center; padding: 1em 0; }";
+    html += "h1 { font-size: 2.5em; margin: 0; }";
+    html += ".container { max-width: 800px; margin: auto; padding: 20px; background-color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-radius: 5px; }";
+    html += "table { width: 100%; border-collapse: collapse; margin-top: 20px; }";
+    html += "th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }";
+    html += "th { background-color: #f4f4f9; color: #333; font-weight: bold; }";
+    html += ".system-status { margin-top: 20px; padding: 20px; border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); background-color: #f9f9f9; }";
+    html += "</style>";
+    html += "</head><body>";
+
+    html += "<header><h1>ESP32-C6 BME680 Sensor Data</h1></header>";
+    html += "<div class='container'>";
+    html += "<table border='1'>";
+    html += "<tr><th>Parameter</th><th>Value</th></tr>";
+
+#define ADD_ROW(param, value) html += "<tr><td>" #param "</td><td id='" #param "'>" + String(value) + "</td></tr>";
+ADD_ROW(iaq, iaq);
+ADD_ROW(static_iaq, static_iaq);
+ADD_ROW(co2_equivalent, co2_equivalent);
+ADD_ROW(bVOC_equivalent, bVOC_equivalent);
+ADD_ROW(raw_temperature, String(raw_temperature) + " °C");
+ADD_ROW(raw_pressure, String(raw_pressure) + " hPa");
+ADD_ROW(raw_humidity, String(raw_humidity) + " %");
+ADD_ROW(raw_gas_resistance, String(raw_gas_resistance) + " Ohm");
+ADD_ROW(stabilization_status, stabilization_status);
+ADD_ROW(run_in_status, run_in_status);
+ADD_ROW(compensated_temperature, String(compensated_temperature) + " °C");
+ADD_ROW(compensated_humidity, String(compensated_humidity) + " %");
+ADD_ROW(compensated_gas_resistance, String(compensated_gas_resistance) + " Ohm");
+ADD_ROW(gas_percentage, gas_percentage);
+
+    html += "</table>";
+
+    // Add System Status section
+    html += "<div class='system-status'>";
+    html += "<h2>System Status</h2>";
+    html += "<p><strong>NTP Time (GMT +3):</strong> <span id='ntp_time'></span></p>";
+    html += "</div>";
+
+    // Add JavaScript for NTP time updates
+    html += "<script>";
+    html += "function updateNtpTime() {";
+    html += "  var xhr = new XMLHttpRequest();";
+    html += "  xhr.open('GET', '/ntp_time', true);";
+    html += "  xhr.onreadystatechange = function() {";
+    html += "    if (xhr.readyState === 4 && xhr.status === 200) {";
+    html += "      document.getElementById('ntp_time').innerText = xhr.responseText;";
+    html += "    }";
+    html += "  };";
+    html += "  xhr.send();";
+    html += "}";
+    html += "setInterval(updateNtpTime, 1000);"; // Update NTP time every second
+    html += "updateNtpTime();"; // Initial call to set the NTP time
+
+    html += "</script></body></html>";
+
+    server.send(200, "text/html", html);
+}
+
+/**
+ * Handle NTP time request
+ */
+void handleNtpTime() {
+    String ntpTime = timeClient.getFormattedTime();
+    server.send(200, "text/plain", ntpTime);
+}
+
+/**
+ * Handle /data endpoint to serve sensor data in JSON format with timestamp
+ */
+void handleData() {
+    String json = "{";
+    json += "\"timestamp\": \"" + timeClient.getFormattedTime() + "\",";
+    json += "\"iaq\": " + String(iaq) + ",";
+    json += "\"static_iaq\": " + String(static_iaq) + ",";
+    json += "\"co2_equivalent\": " + String(co2_equivalent) + ",";
+    json += "\"bVOC_equivalent\": " + String(bVOC_equivalent) + ",";
+    json += "\"raw_temperature\": " + String(raw_temperature) + ",";
+    json += "\"raw_pressure\": " + String(raw_pressure) + ",";
+    json += "\"raw_humidity\": " + String(raw_humidity) + ",";
+    json += "\"raw_gas_resistance\": " + String(raw_gas_resistance) + ",";
+    json += "\"stabilization_status\": " + String(stabilization_status) + ",";
+    json += "\"run_in_status\": " + String(run_in_status) + ",";
+    json += "\"compensated_temperature\": " + String(compensated_temperature) + ",";
+    json += "\"compensated_humidity\": " + String(compensated_humidity) + ",";
+    json += "\"compensated_gas_resistance\": " + String(compensated_gas_resistance) + ",";
+    json += "\"gas_percentage\": " + String(gas_percentage);
+    json += "}";
+
+    server.send(200, "application/json", json);
+}
+
+void setup() {
+    // Initialize serial communication at 115200 baud rate
+    Serial.begin(115200);
+
+    // Initialize I2C interface with SDA (pin 22) and SCL (pin 23)
+    Wire.begin(22, 23);
+
+    // Check if BSEC library initialized correctly
+    if (!envSensor.begin(BME68X_I2C_ADDR_HIGH, Wire)) {
+        checkBsecStatus(envSensor);
+    }
+
+    // Set temperature offset (adjust as necessary)
+    envSensor.setTemperatureOffset(TEMP_OFFSET_ULP);  // Adjust value based on your sensor and application
+
+    // Define the subscription list
+    bsecSensor sensorList[] = {
+            BSEC_OUTPUT_IAQ,
+            BSEC_OUTPUT_STATIC_IAQ,
+            BSEC_OUTPUT_CO2_EQUIVALENT,
+            BSEC_OUTPUT_BREATH_VOC_EQUIVALENT,
+            BSEC_OUTPUT_RAW_TEMPERATURE,
+            BSEC_OUTPUT_RAW_PRESSURE,
+            BSEC_OUTPUT_RAW_HUMIDITY,
+            BSEC_OUTPUT_RAW_GAS,
+            BSEC_OUTPUT_STABILIZATION_STATUS,
+            BSEC_OUTPUT_RUN_IN_STATUS,
+            BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_TEMPERATURE,
+            BSEC_OUTPUT_SENSOR_HEAT_COMPENSATED_HUMIDITY,
+            BSEC_OUTPUT_COMPENSATED_GAS,
+            BSEC_OUTPUT_GAS_PERCENTAGE
+    };
+
+    // Subscribe to desired BSEC outputs
+    if (!envSensor.updateSubscription(sensorList, ARRAY_LEN(sensorList), SAMPLE_RATE)) {
+        checkBsecStatus(envSensor);
+    }
+
+    // Attach callback for new data
+    envSensor.attachCallback(newDataCallback);
+
+    Serial.println("BSEC library version " + 
+                   String(envSensor.version.major) + "." +
+                   String(envSensor.version.minor) + "." +
+                   String(envSensor.version.major_bugfix) + "." +
+                   String(envSensor.version.minor_bugfix));
+
+    // Connect to Wi-Fi
+    WiFi.begin(ssid, password);
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(1000);
+        Serial.println("Connecting to WiFi...");
+    }
+    Serial.println("Connected to WiFi");
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
+
+    // Initialize NTP client
+    timeClient.begin();
+    timeClient.setTimeOffset(3 * 3600); // GMT +3
+
+    // Start the web server
+    server.on("/", handleRoot);
+    server.on("/ntp_time", handleNtpTime);
+    server.on("/data", handleData);
+    server.begin();
+}
+
+void loop() {
+    // Call run function to process sensor data
+    if (!envSensor.run()) {
+        checkBsecStatus(envSensor);
+    }
+
+    // Handle client requests
+    server.handleClient();
+
+    // Update uptime
+    uptime++;
+
+    // Update NTP time every 10 seconds
+    if (millis() % 10000 == 0) {
+        timeClient.update();
+    }
+}
