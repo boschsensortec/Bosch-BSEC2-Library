@@ -280,7 +280,7 @@ int64_t Bsec2::getTimeMs(void)
 
     lastMillis = timeMs;
 
-    return timeMs + (ovfCounter * INT64_C(0xFFFFFFFF));
+    return timeMs + (ovfCounter * INT64_C(0x100000000));
 }
 
 /**
